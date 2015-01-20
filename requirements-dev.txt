@@ -1,0 +1,7 @@
+pytest
+pytest-cov
+python-coveralls
+fakeredis
+mock==1.0.1
+tox
+freezegun

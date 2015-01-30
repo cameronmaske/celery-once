@@ -24,7 +24,7 @@ Requirements
 Usage
 =====
 
-To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called 'QueueOnceTask'.
+To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce``.
 
 You may need to tune need the following Celery configuration options...
 
@@ -35,14 +35,14 @@ You may need to tune need the following Celery configuration options...
 .. code:: python
 
     from celery import Celery
-    from celery_once import QueueOnceTask
+    from celery_once import QueueOnce
     from time import sleep
 
     celery = Celery('tasks', broker='amqp://guest@localhost//')
     celery.conf.ONCE_REDIS_URL = 'redis://localhost:6379/0'
     celery.conf.ONCE_DEFAULT_TIMEOUT = 60 * 60
 
-    @celery.task(base=QueueOnceTask)
+    @celery.task(base=QueueOnce)
     def slow_task():
         sleep(30)
         return "Done!"
@@ -87,7 +87,7 @@ Optionally, instead of raising an ``AlreadyQueued`` exception, the task can retu
     # Or, handle it gracefully at run time.
     result = example.apply(args=(10), once={'graceful': True})
     # or by default.
-    @celery.task(base=QueueOnceTask, once={'graceful': True})
+    @celery.task(base=QueueOnce, once={'graceful': True})
     def slow_task():
         sleep(30)
         return "Done!"
@@ -101,7 +101,7 @@ Take for example, the following task below...
 
 .. code:: python
 
-    @celery.task(base=QueueOnceTask)
+    @celery.task(base=QueueOnce)
     def slow_add(a, b):
         sleep(30)
         return a + b
@@ -117,7 +117,7 @@ If you want to specify locking based on a subset, or no arguments you can adjust
 
 .. code:: python
 
-    @celery.task(base=QueueOnceTask, once={'keys': ['a']})
+    @celery.task(base=QueueOnce, once={'keys': ['a']})
     def slow_add(a, b):
         sleep(30)
         return a + b
@@ -132,7 +132,7 @@ If you want to specify locking based on a subset, or no arguments you can adjust
 
 .. code:: python
 
-    @celery.task(base=QueueOnceTask, once={'keys': []})
+    @celery.task(base=QueueOnce, once={'keys': []})
     def slow_add(a, b):
         sleep(30)
         return a + b
@@ -152,7 +152,7 @@ This is set globally in celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but
 
 .. code:: python
 
-    @celery.task(base=QueueOnceTask, once={'timeout': 60 * 60 * 10})
+    @celery.task(base=QueueOnce, once={'timeout': 60 * 60 * 10})
     def long_running_task():
         sleep(60 * 60 * 3)
 

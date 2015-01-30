@@ -1,16 +1,11 @@
-# Config file for automatic testing at travis-ci.org
-
 language: python
-
 python:
-  - "3.4"
-  - "3.3"
   - "2.7"
-  - "2.6"
-  - "pypy"
-
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -r requirements.txt
-
-# command to run tests, e.g. python setup.py test
-script: python setup.py test
+  - "3.3"
+install:
+  - "pip install -e ."
+  - "pip install -r requirements-dev.txt"
+script:
+  - py.test --cov celery_once --cov-report term-missing
+after_success:
+  - coveralls

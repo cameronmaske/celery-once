@@ -52,6 +52,13 @@ def test_raise_or_lock_locked(redis):
     assert e.value.countdown == 30
     assert e.value.message == "Expires in 30 seconds"
 
+@freeze_time("2012-01-14")  # 1326499200
+def test_raise_or_lock_locked_and_expired(redis):
+    # Set to have expired 30 ago seconds!
+    redis.set("test", 1326499200 - 30)
+    QueueOnce().raise_or_lock(key="test", expires=60)
+    assert redis.get("test") is not None
+    assert redis.ttl("test") == 60
 
 def test_clear_lock(redis):
     redis.set("test", 1326499200 + 30)

@@ -8,7 +8,7 @@ Celery Once allows you to prevent multiple execution and queuing of `celery <htt
 Installation
 ============
 
-Install ``celery_once`` is simple with pip, just run:
+Installing ``celery_once`` is simple with pip, just run:
 
 ::
 
@@ -18,17 +18,17 @@ Install ``celery_once`` is simple with pip, just run:
 Requirements
 ============
 
-* `Celery <http://www.celeryproject.org/>`_. Built to run with Celery 3.1. Older versions, may work, but are not unofficially supported.
-* `Redis <http://redis.io/>`_ is used as a distributed locking mechanizm.
+* `Celery <http://www.celeryproject.org/>`_. Built to run with Celery 3.1. Older versions may work, but are not officially supported.
+* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism.
 
 Usage
 =====
 
 To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce``.
 
-You may need to tune need the following Celery configuration options...
+You may need to tune the following Celery configuration options...
 
-    * ``ONCE_REDIS_URL`` should point towards a running redis (defaults to ``redis://localhost:6379/0``)
+    * ``ONCE_REDIS_URL`` should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
     * ``ONCE_DEFAULT_TIMEOUT`` how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
 
 
@@ -48,9 +48,9 @@ You may need to tune need the following Celery configuration options...
         return "Done!"
 
 
-Behind the scenes, this overrides ``apply_async`` and ``delay``. It does not effect calling the tasks directly.
+Behind the scenes, this overrides ``apply_async`` and ``delay``. It does not affect calling the tasks directly.
 
-When running the task, ``celery_once`` checks that no lock is in place (against a redis key).
+When running the task, ``celery_once`` checks that no lock is in place (against a Redis key).
 If it isn't, the task will run as normal. Once the task completes (or ends due to an exception) the lock will clear.
 If an attempt is made to run the task again before it completes an ``AlreadyQueued`` exception will be raised.
 
@@ -96,7 +96,7 @@ Optionally, instead of raising an ``AlreadyQueued`` exception, the task can retu
 ``keys``
 --------
 
-By default ``celery_once`` creates a lock based on the task's name and it's arguments and values.
+By default ``celery_once`` creates a lock based on the task's name and its arguments and values.
 Take for example, the following task below...
 
 .. code:: python
@@ -137,7 +137,7 @@ If you want to specify locking based on a subset, or no arguments you can adjust
         sleep(30)
         return a + b
 
-    # Will enforce only one task can run, no matter what argurements.
+    # Will enforce only one task can run, no matter what arguments.
     example.delay(1, 1)
     example.delay(2, 2)
     Traceback (most recent call last):
@@ -148,7 +148,7 @@ If you want to specify locking based on a subset, or no arguments you can adjust
 ``timeout``
 -----------
 As a fall back, ``celery_once`` will clear a lock after 60 minutes.
-This is set globally in celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but can be set for individual tasks using...
+This is set globally in Celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but can be set for individual tasks using...
 
 .. code:: python
 
@@ -160,7 +160,7 @@ This is set globally in celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but
 Support
 =======
 
-* Tests are run against Python 2.7 and 3.3. Other version may work, but are not unofficially supported.
+* Tests are run against Python 2.7 and 3.3. Other versions may work, but are not officially supported.
 
 Contributing
 ============

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from celery import Task
 from inspect import getcallargs
-from helpers import queue_once_key, get_redis, now_unix
+from .helpers import queue_once_key, get_redis, now_unix
 
 
 class AlreadyQueued(Exception):
@@ -20,10 +20,10 @@ class QueueOnce(Task):
     'There can be only one'. - Highlander (1986)
 
     An abstract tasks with the ability to detect if it has already been queued.
-    Instead of calling .delay, call the .queue method, which attempts to queue
-    the task, but checks it's not already queued. By default it will raise an
+    When running the task (through .delay/.apply_async) it checks if the tasks
+    is not already queued. By default it will raise an
     an AlreadyQueued exception if it is, by you can silence this by including
-    `options={'graceful': True}` on the defer call.
+    `options={'graceful': True}` in apply_async or in the task's settings.
 
     Example:
 
@@ -93,17 +93,21 @@ class QueueOnce(Task):
         kwargs = kwargs or {}
         call_args = getcallargs(self.run, *args, **kwargs)
         key = queue_once_key(self.name, call_args, restrict_to)
-        print key
         return key
 
     def raise_or_lock(self, key, expires):
+        """
+        Checks if the task is locks and raises an exception, else locks
+        the task.
+        """
         now = now_unix()
         # Check if the tasks is already queued if key is in redis.
         result = self.redis.get(key)
         if result:
             # Work out how many seconds remaining till the task expires.
             remaining = int(result) - now
-            raise self.AlreadyQueued(remaining)
+            if remaining > 0:
+                raise self.AlreadyQueued(remaining)
 
         # By default, the tasks and redis key expire after 60 minutes.
         # (meaning it will not be executed and the lock will clear).

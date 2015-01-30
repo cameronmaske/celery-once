@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 from time import time
 from redis import StrictRedis
-from urlparse import urlparse
+try:
+    from urlparse import urlparse
+except:
+    # Python 3!
+    from urllib.parse import urlparse
+import six
 
 
 def parse_redis_details(url):
@@ -36,7 +41,7 @@ def kwargs_to_list(kwargs):
     kwargs_list = []
     # Kwargs are sorted in alphabetic order.
     # Taken from http://www.saltycrane.com/blog/2007/09/how-to-sort-python-dictionary-by-keys/
-    for k, v in sorted(kwargs.iteritems(), key=lambda (k, v): (v, k)):
+    for k, v in sorted(six.iteritems(kwargs), key=lambda kv: (str(kv[0]), str(kv[1]))):
         kwargs_list.append(str(k) + '-' + str(v))
     return kwargs_list
 

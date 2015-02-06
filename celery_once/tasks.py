@@ -97,7 +97,7 @@ class QueueOnce(Task):
 
     def raise_or_lock(self, key, expires):
         """
-        Checks if the task is locks and raises an exception, else locks
+        Checks if the task is locked and raises an exception, else locks
         the task.
         """
         now = now_unix()

@@ -62,8 +62,9 @@ development.
    virtualenvwrapper installed, this is how you set up your fork for
    local development::
 
-   $ mkvirtualenv celery-once $ cd celery-once/ $ pip install -e . $
-   pip install -r requirements-dev.txt
+   $ mkvirtualenv celery-once 
+   $ cd celery-once/ $ pip install -e . 
+   $ pip install -r requirements-dev.txt
 
 4. Create a branch for local development::
 
@@ -71,14 +72,15 @@ development.
 
 Now you can make your changes locally.
 
-5. When you’re done making changes, check that your changes using…
+5. When you’re done making changes, check that your changes using::
 
    $ py.test tests/
 
 6. Commit your changes and push your branch to GitHub::
 
-   $ git add . $ git commit -m “Your detailed description of your
-   changes.” $ git push origin name-of-your-bugfix-or-feature
+   $ git add . 
+   $ git commit -m “Your detailed description of your changes.” 
+   $ git push origin name-of-your-bugfix-or-feature
 
 7. Submit a pull request through the GitHub website.
 
@@ -100,12 +102,8 @@ Tips
 
 To run a subset of tests::
 
-::
-
     $ py.test
 
 To run against python 2.7 and 3.3::
-
-::
 
     $ tox

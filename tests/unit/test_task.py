@@ -9,6 +9,11 @@ def simple_example():
     return "simple"
 
 
+@task(name='bound_task', bind=True, base=QueueOnce)
+def bound_task(self, a, b):
+    return a + b
+
+
 @task(name='args_example', base=QueueOnce)
 def args_example(a, b):
     return a + b
@@ -33,6 +38,10 @@ def test_get_key_args_2():
 
 def test_get_key_select_args_1():
     assert "qo_select_args_example_a-1" == select_args_example.get_key(kwargs={'a':1, 'b': 2})
+
+
+def test_get_key_bound_task():
+    assert "qo_bound_task_a-1_b-2" == bound_task.get_key(kwargs={'a': 1, 'b': 2})
 
 
 @freeze_time("2012-01-14")  # 1326499200

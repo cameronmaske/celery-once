@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
-from celery import Task
+
 from inspect import getcallargs
-from .helpers import queue_once_key, get_redis, now_unix
+
+from celery import Task
+
+from .helpers import queue_once_key
+from .backends import get_backend
 
 
 class AlreadyQueued(Exception):
+
     def __init__(self, countdown):
         self.message = "Expires in {} seconds".format(countdown)
         self.countdown = countdown
 
 
 class QueueOnce(Task):
-    AlreadyQueued = AlreadyQueued
     once = {
         'graceful': False,
     }
@@ -43,9 +47,15 @@ class QueueOnce(Task):
         return app.conf
 
     @property
-    def redis(self):
-        return get_redis(
-            getattr(self.config, "ONCE_REDIS_URL", "redis://localhost:6379/0"))
+    def once_backend(self):
+        backend_url = (
+            # kept for compatbility reasons
+            getattr(self.config, "ONCE_REDIS_URL", None)
+            # New generic config
+            or getattr(self.config, "ONCE_BACKEND_URL", None)
+            # default value
+            or "redis://localhost:6379/0")
+        return get_backend(backend_url)
 
     @property
     def default_timeout(self):
@@ -76,8 +86,8 @@ class QueueOnce(Task):
 
         key = self.get_key(args, kwargs)
         try:
-            self.raise_or_lock(key, once_timeout)
-        except self.AlreadyQueued as e:
+            self.once_backend.raise_or_lock(key, once_timeout)
+        except AlreadyQueued as e:
             if once_graceful:
                 return None
             raise e
@@ -95,31 +105,10 @@ class QueueOnce(Task):
         key = queue_once_key(self.name, call_args, restrict_to)
         return key
 
-    def raise_or_lock(self, key, expires):
-        """
-        Checks if the task is locked and raises an exception, else locks
-        the task.
-        """
-        now = now_unix()
-        # Check if the tasks is already queued if key is in redis.
-        result = self.redis.get(key)
-        if result:
-            # Work out how many seconds remaining till the task expires.
-            remaining = int(result) - now
-            if remaining > 0:
-                raise self.AlreadyQueued(remaining)
-
-        # By default, the tasks and redis key expire after 60 minutes.
-        # (meaning it will not be executed and the lock will clear).
-        self.redis.setex(key, expires, now + expires)
-
-    def clear_lock(self, key):
-        self.redis.delete(key)
-
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
         After a task has run (both succesfully or with a failure) clear the
         lock.
         """
         key = self.get_key(args, kwargs)
-        self.clear_lock(key)
+        self.once_backend.clear_lock(key)

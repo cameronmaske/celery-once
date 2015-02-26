@@ -1,30 +1,10 @@
 # -*- coding: utf-8 -*-
-from time import time
-from redis import StrictRedis
-try:
-    from urlparse import urlparse
-except:
-    # Python 3!
-    from urllib.parse import urlparse
+
+"""Definition of helper functions."""
+
 import six
 
-
-def parse_redis_details(url):
-    parsed = urlparse(url)
-    details = {
-        'host': parsed.hostname,
-        'password': parsed.password,
-        'port': parsed.port
-    }
-    try:
-        details['db'] = int(parsed.path.lstrip('/'))
-    except:
-        pass
-    return details
-
-
-def get_redis(url):
-    return StrictRedis(**(parse_redis_details(url)))
+from time import time
 
 
 def now_unix():

@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+
+import pytest
+import six
+
 from celery_once.helpers import queue_once_key, kwargs_to_list
 
 
@@ -25,6 +30,20 @@ def test_kwargs_to_list_4():
     keys = kwargs_to_list(
         {'int': 1, 'boolean': True, 'str': 'abc', 'list': [1, '2']})
     assert keys == ["boolean-True", "int-1", "list-[1, '2']", "str-abc"]
+
+
+@pytest.mark.skipif(six.PY3, reason='requires python 2')
+def test_kwargs_to_list_5():
+    keys = kwargs_to_list(
+        {'int': 1, 'boolean': True, 'str': 'abc', 'list': [1, u'2']})
+    assert keys == ["boolean-True", "int-1", "list-[1, '2']", "str-abc"]
+
+
+@pytest.mark.skipif(six.PY3, reason='requires python 2')
+def test_kwargs_to_list_6():
+    keys = kwargs_to_list(
+        {'int': 1, 'boolean': True, 'str': 'abc', 'list': [1, u'hé']})
+    assert keys == ["boolean-True", "int-1", "list-[1, 'h\\xc3\\xa9']", "str-abc"]
 
 
 def test_queue_once_key():

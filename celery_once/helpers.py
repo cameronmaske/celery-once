@@ -34,6 +34,20 @@ def now_unix():
     return int(time())
 
 
+def convert_unicode_items_to_str(l):
+    """
+    Convert every binary type item (str in python 2, bytes in python 3)
+    into text type (unicode in python 2, str in python 3).
+    """
+    for i, item in enumerate(l):
+        if six.PY2:
+            if isinstance(item, unicode):
+                l[i] = item.encode('utf-8')
+            elif isinstance(item, list):
+                item = convert_unicode_items_to_str(item)
+    return l
+
+
 def kwargs_to_list(kwargs):
     """
     Turns {'a': 1, 'b': 2} into ["a-1", "b-2"]
@@ -42,6 +56,8 @@ def kwargs_to_list(kwargs):
     # Kwargs are sorted in alphabetic order.
     # Taken from http://www.saltycrane.com/blog/2007/09/how-to-sort-python-dictionary-by-keys/
     for k, v in sorted(six.iteritems(kwargs), key=lambda kv: (str(kv[0]), str(kv[1]))):
+        if isinstance(v, list):
+            v = convert_unicode_items_to_str(v)
         kwargs_list.append(str(k) + '-' + str(v))
     return kwargs_list
 

@@ -34,15 +34,30 @@ def now_unix():
     return int(time())
 
 
+def force_string(kwargs):
+    """
+    Force key in dict or list to a string.
+    Fixes: https://github.com/TrackMaven/celery-once/issues/11
+    """
+    if isinstance(kwargs, dict):
+        return {
+            force_string(key): force_string(value) for key, value in six.iteritems(kwargs)}
+    elif isinstance(kwargs, list):
+        return [force_string(element) for element in kwargs]
+    elif six.PY2 and isinstance(kwargs, unicode):
+        return kwargs.encode('utf-8')
+    return kwargs
+
+
 def kwargs_to_list(kwargs):
     """
     Turns {'a': 1, 'b': 2} into ["a-1", "b-2"]
     """
     kwargs_list = []
-    # Kwargs are sorted in alphabetic order.
+    # Kwargs are sorted in alphabetic order by their keys.
     # Taken from http://www.saltycrane.com/blog/2007/09/how-to-sort-python-dictionary-by-keys/
-    for k, v in sorted(six.iteritems(kwargs), key=lambda kv: (str(kv[0]), str(kv[1]))):
-        kwargs_list.append(str(k) + '-' + str(v))
+    for k, v in sorted(six.iteritems(kwargs), key=lambda kv: str(kv[0])):
+        kwargs_list.append(str(k) + '-' + str(force_string(v)))
     return kwargs_list
 
 

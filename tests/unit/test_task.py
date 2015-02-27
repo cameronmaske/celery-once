@@ -8,6 +8,11 @@ def simple_example():
     return "simple"
 
 
+@task(name='bound_task', bind=True, base=QueueOnce)
+def bound_task(self, a, b):
+    return a + b
+
+
 @task(name='args_example', base=QueueOnce)
 def args_example(a, b):
     return a + b

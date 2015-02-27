@@ -98,6 +98,12 @@ class QueueOnce(Task):
         args = args or {}
         kwargs = kwargs or {}
         call_args = getcallargs(self.run, *args, **kwargs)
+        # Remove the task instance from the kwargs. This only happens when the
+        # task has the 'bind' attribute set to True. We remove it, as the task
+        # has a memory pointer in its repr, that will change between the task
+        # caller and the celery worker
+        if isinstance(call_args.get('self'), Task):
+            del call_args['self']
         key = queue_once_key(self.name, call_args, restrict_to)
         return key
 

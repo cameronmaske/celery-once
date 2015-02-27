@@ -7,62 +7,67 @@ from celery_once import QueueOnce, AlreadyQueued
 
 
 app = Celery()
-app.conf.ONCE_BACKEND_URL = 'redis://localhost:1337/0'
-app.conf.ONCE_DEFAULT_TIMEOUT = 30 * 60
+app.conf.ONCE = {
+    'backend': 'celery_once.backends.Redis',
+    'settings': {
+        'url': 'redis://localhost:1337/0',
+        'timeout': 30 * 60
+    }
+}
 app.conf.CELERY_ALWAYS_EAGER = True
 
 
 @app.task(name="example", base=QueueOnce, once={'keys': ['a']})
-def example(redis, a=1):
-    return redis.get("qo_example_a-1")
+def example(redis_backend, a=1):
+    return redis_backend.redis.get("qo_example_a-1")
 
 
-def test_delay_1(redis):
-    result = example.delay(redis)
+def test_delay_1(redis_backend):
+    result = example.delay(redis_backend)
     assert result.get() is not None
-    redis.get("qo_example_a-1") is None
+    assert redis_backend.redis.get("qo_example_a-1") is None
 
 
-def test_delay_2(redis):
-    redis.set("qo_example_a-1", 10000000000)
+def test_delay_2(redis_backend):
+    redis_backend.redis.set("qo_example_a-1", 10000000000)
     try:
-        example.delay(redis)
+        example.delay(redis_backend)
         pytest.fail("Didn't raise AlreadyQueued.")
     except AlreadyQueued:
         pass
 
 
 @freeze_time("2012-01-14")  # 1326499200
-def test_delay_3(redis):
-    redis.set("qo_example_a-1", 1326499200 - 60 * 60)
-    example.delay(redis)
+def test_delay_3(redis_backend):
+    redis_backend.redis.set("qo_example_a-1", 1326499200 - 60 * 60)
+    example.delay(redis_backend)
 
 
-def test_apply_async_1(redis):
-    result = example.apply_async(args=(redis, ))
+def test_apply_async_1(redis_backend):
+    result = example.apply_async(args=(redis_backend, ))
     assert result.get() is not None
-    redis.get("qo_example_a-1") is None
+    redis_backend.redis.get("qo_example_a-1") is None
 
 
-def test_apply_async_2(redis):
-    redis.set("qo_example_a-1", 10000000000)
+def test_apply_async_2(redis_backend):
+    redis_backend.redis.set("qo_example_a-1", 10000000000)
     try:
-        example.apply_async(args=(redis, ))
+        example.apply_async(args=(redis_backend, ))
         pytest.fail("Didn't raise AlreadyQueued.")
     except AlreadyQueued:
         pass
 
 
-def test_apply_async_3(redis):
-    redis.set("qo_example_a-1", 10000000000)
-    result = example.apply_async(args=(redis, ), once={'graceful': True})
+def test_apply_async_3(redis_backend):
+    redis_backend.redis.set("qo_example_a-1", 10000000000)
+    result = example.apply_async(args=(redis_backend, ), once={'graceful': True})
     assert result is None
 
 
 @freeze_time("2012-01-14")  # 1326499200
-def test_apply_async_4(redis):
-    redis.set("qo_example_a-1", 1326499200 - 60 * 60)
-    example.apply_async(args=(redis, ))
+def test_apply_async_4(redis_backend):
+    redis_backend.redis.set("qo_example_a-1", 1326499200 - 60 * 60)
+    example.apply_async(args=(redis_backend, ))
 
 
 def test_redis():

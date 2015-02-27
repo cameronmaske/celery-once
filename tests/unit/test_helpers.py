@@ -40,4 +40,3 @@ def test_queue_once_key_kwargs():
 def test_queue_once_key_kwargs_restrict_keys():
     key = queue_once_key("example", {'pk': 10, 'id': 10}, restrict_to=['pk'])
     assert key == "qo_example_pk-10"
-

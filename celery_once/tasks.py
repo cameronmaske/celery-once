@@ -47,20 +47,16 @@ class QueueOnce(Task):
         return app.conf
 
     @property
+    def once_config(self):
+        return self.config.ONCE
+
+    @property
     def once_backend(self):
-        backend_url = (
-            # kept for compatbility reasons
-            getattr(self.config, "ONCE_REDIS_URL", None)
-            # New generic config
-            or getattr(self.config, "ONCE_BACKEND_URL", None)
-            # default value
-            or "redis://localhost:6379/0")
-        return get_backend(backend_url)
+        return get_backend(self.once_config)
 
     @property
     def default_timeout(self):
-        return getattr(
-            self.config, "ONCE_DEFAULT_TIMEOUT", 60 * 60)
+        return self.once_config['settings'].get('timeout', 60 * 60)
 
     def apply_async(self, args=None, kwargs=None, **options):
         """

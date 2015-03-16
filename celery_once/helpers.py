@@ -3,8 +3,21 @@
 """Definition of helper functions."""
 
 import six
+import importlib
 
 from time import time
+
+
+def import_backend(config):
+    """
+    Imports and initializes the Backend class.
+    """
+    backend_name = config['backend']
+    path = backend_name.split('.')
+    backend_mod_name, backend_class_name = '.'.join(path[:-1]), path[-1]
+    backend_mod = importlib.import_module(backend_mod_name)
+    backend_class = getattr(backend_mod, backend_class_name)
+    return backend_class(config['settings'])
 
 
 def now_unix():

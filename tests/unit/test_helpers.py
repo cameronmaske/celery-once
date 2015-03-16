@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from celery_once.helpers import queue_once_key, kwargs_to_list, force_string
+from celery_once.helpers import (
+    queue_once_key, kwargs_to_list, force_string, import_backend)
 
 import pytest
 import six
@@ -80,3 +81,17 @@ def test_queue_once_key_kwargs():
 def test_queue_once_key_kwargs_restrict_keys():
     key = queue_once_key("example", {'pk': 10, 'id': 10}, restrict_to=['pk'])
     assert key == "qo_example_pk-10"
+
+
+class TestBackend(object):
+    def __init__(self, settings):
+        self.settings = settings
+
+
+def test_import_backend():
+    config = {
+        'backend': "tests.backends.TestBackend",
+        'settings': 1
+    }
+    backend = import_backend(config)
+    assert backend.settings == 1

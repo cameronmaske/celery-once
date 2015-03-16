@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
 
+"""Definition of the QueueOnce task and AlreadyQueued exception."""
+
 from inspect import getcallargs
 
 from celery import Task
 
-from .helpers import queue_once_key
-from .backends import get_backend
+from .helpers import queue_once_key, import_backend
 
 
 class AlreadyQueued(Exception):
-
     def __init__(self, countdown):
         self.message = "Expires in {} seconds".format(countdown)
         self.countdown = countdown
 
 
 class QueueOnce(Task):
+    abstract = True
     once = {
-        'graceful': False,
+        'graceful': False
     }
 
     """
@@ -38,8 +39,6 @@ class QueueOnce(Task):
     >>>     from time import sleep
     >>>     sleep(time)
     """
-    abstract = True
-    once = {}
 
     @property
     def config(self):
@@ -52,7 +51,7 @@ class QueueOnce(Task):
 
     @property
     def once_backend(self):
-        return get_backend(self.once_config)
+        return import_backend(self.once_config)
 
     @property
     def default_timeout(self):
@@ -60,7 +59,8 @@ class QueueOnce(Task):
 
     def apply_async(self, args=None, kwargs=None, **options):
         """
-        Queues a task, raises an exception by default if already queued.
+        Attempts to queues a task.
+        Will raises an AlreadyQueued exception if already queued.
 
         :param \*args: positional arguments passed on to the task.
         :param \*\*kwargs: keyword arguments passed on to the task.
@@ -82,7 +82,7 @@ class QueueOnce(Task):
 
         key = self.get_key(args, kwargs)
         try:
-            self.once_backend.raise_or_lock(key, once_timeout)
+            self.once_backend.raise_or_lock(key, timeout=once_timeout)
         except AlreadyQueued as e:
             if once_graceful:
                 return None

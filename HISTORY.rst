@@ -1,6 +1,15 @@
 History
 =======
 
+0.1.2
+-----
+
+2015-03-15
+
+Bugfixes:
+
+- Standardized unicode/string handling for the name of a task when generating lock keys.
+
 0.1.1
 -----
 

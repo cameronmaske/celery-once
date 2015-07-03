@@ -14,6 +14,7 @@ class QueueOnce(Task):
     AlreadyQueued = AlreadyQueued
     once = {
         'graceful': False,
+        'unlock_before_run': False,
     }
 
     """
@@ -119,13 +120,28 @@ class QueueOnce(Task):
         # (meaning it will not be executed and the lock will clear).
         self.redis.setex(key, expires, now + expires)
 
+    def get_unlock_before_run(self):
+        return self.once.get('unlock_before_run', False)
+
+    def __call__(self, *args, **kwargs):
+        # Only clear the lock before the task's execution if the
+        # "unlock_before_run" option is True
+        if self.get_unlock_before_run():
+            key = self.get_key(args, kwargs)
+            self.clear_lock(key)
+
+        return super(QueueOnce, self).__call__(*args, **kwargs)
+
     def clear_lock(self, key):
         self.redis.delete(key)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
         After a task has run (both succesfully or with a failure) clear the
-        lock.
+        lock if "unlock_before_run" is False.
         """
-        key = self.get_key(args, kwargs)
-        self.clear_lock(key)
+        # Only clear the lock after the task's execution if the
+        # "unlock_before_run" option is False
+        if not self.get_unlock_before_run():
+            key = self.get_key(args, kwargs)
+            self.clear_lock(key)

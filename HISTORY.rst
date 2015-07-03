@@ -1,6 +1,13 @@
 History
 =======
 
+In development
+--------------
+
+Features:
+
+- Added option ``unlock_before_run`` to remove the lock before of after the task's execution.
+
 0.1.2
 -----
 

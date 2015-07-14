@@ -14,11 +14,21 @@ app.conf.CELERY_ALWAYS_EAGER = True
 def example(redis, a=1):
     return redis.get("qo_example_a-1")
 
+@app.task(name="example_unlock_before_run", base=QueueOnce, once={'keys': ['a'], 'unlock_before_run': True})
+def example_unlock_before_run(redis, a=1):
+    return redis.get("qo_example_unlock_before_run_a-1")
+
+@app.task(name="example_unlock_before_run_set_key", base=QueueOnce, once={'keys': ['a'], 'unlock_before_run': True})
+def example_unlock_before_run_set_key(redis, a=1):
+    result = redis.get("qo_example_unlock_before_run_set_key_a-1")
+    redis.set("qo_example_unlock_before_run_set_key_a-1", b"1234")
+    return result
+
 
 def test_delay_1(redis):
     result = example.delay(redis)
     assert result.get() is not None
-    redis.get("qo_example_a-1") is None
+    assert redis.get("qo_example_a-1") is None
 
 def test_delay_2(redis):
     redis.set("qo_example_a-1", 10000000000)
@@ -34,10 +44,21 @@ def test_delay_3(redis):
     example.delay(redis)
 
 
+def test_delay_unlock_before_run_1(redis):
+    result = example_unlock_before_run.delay(redis)
+    assert result.get() is None
+    assert redis.get("qo_example_unlock_before_run_a-1") is None
+
+def test_delay_unlock_before_run_2(redis):
+    result = example_unlock_before_run_set_key.delay(redis)
+    assert result.get() is None
+    assert redis.get("qo_example_unlock_before_run_set_key_a-1") == b"1234"
+
+
 def test_apply_async_1(redis):
     result = example.apply_async(args=(redis, ))
     assert result.get() is not None
-    redis.get("qo_example_a-1") is None
+    assert redis.get("qo_example_a-1") is None
 
 def test_apply_async_2(redis):
     redis.set("qo_example_a-1", 10000000000)
@@ -51,6 +72,17 @@ def test_apply_async_3(redis):
     redis.set("qo_example_a-1", 10000000000)
     result = example.apply_async(args=(redis, ), once={'graceful': True})
     assert result is None
+
+
+def test_apply_async_unlock_before_run_1(redis):
+    result = example_unlock_before_run.apply_async(args=(redis, ))
+    assert result.get() is None
+    assert redis.get("qo_example_unlock_before_run_a-1") is None
+
+def test_apply_async_unlock_before_run_2(redis):
+    result = example_unlock_before_run_set_key.apply_async(args=(redis, ))
+    assert result.get() is None
+    assert redis.get("qo_example_unlock_before_run_set_key_a-1") == b"1234"
 
 
 @freeze_time("2012-01-14")  # 1326499200

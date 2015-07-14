@@ -157,6 +157,21 @@ This is set globally in Celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but
         sleep(60 * 60 * 3)
 
 
+``unlock_before_run``
+---------------------
+
+By default, the lock is removed after the task has executed (using celery's `after_return <https://celery.readthedocs.org/en/latest/reference/celery.app.task.html#celery.app.task.Task.after_return>`_). This behaviour can be changed setting the task's option ``unlock_before_run``. When set to ``True``, the lock will be removed just before executing the task.
+
+**Caveat**: any retry of the task won't re-enable the lock!
+
+.. code:: python
+
+    @celery.task(base=QueueOnce, once={'unlock_before_run': True})
+    def slow_task():
+        sleep(30)
+        return "Done!"
+
+
 Support
 =======
 

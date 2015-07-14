@@ -1,12 +1,14 @@
 History
 =======
 
-In development
---------------
+0.1.3
+-----
+
+2015-07-14
 
 Features:
 
-- Added option ``unlock_before_run`` to remove the lock before of after the task's execution.
+- Added option ``unlock_before_run`` to remove the lock before of after the task's execution. Thanks @jcugat!
 
 0.1.2
 -----

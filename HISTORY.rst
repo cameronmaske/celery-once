@@ -1,6 +1,16 @@
 History
 =======
 
+0.1.4
+-----
+
+2015-07-29
+
+Bugfixes:
+
+- Fixed an issue where celery beat would crash on graceful enable tasks (#27).
+Thanks @PhilipGarnero!
+
 0.1.3
 -----
 

@@ -12,7 +12,7 @@ requirements = [
 
 setup(
     name='celery_once',
-    version='0.1.3',
+    version='0.1.4',
     description='Allows you to prevent multiple execution and queuing of celery tasks.',
     long_description=readme,
     author='Cameron Maske',

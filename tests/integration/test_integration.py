@@ -71,7 +71,7 @@ def test_apply_async_2(redis):
 def test_apply_async_3(redis):
     redis.set("qo_example_a-1", 10000000000)
     result = example.apply_async(args=(redis, ), once={'graceful': True})
-    assert result is None
+    assert result.result is None
 
 
 def test_apply_async_unlock_before_run_1(redis):

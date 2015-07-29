@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from celery import Task
+from celery import Task, states
+from celery.result import EagerResult
 from inspect import getcallargs
 from .helpers import queue_once_key, get_redis, now_unix
 
@@ -80,7 +81,7 @@ class QueueOnce(Task):
             self.raise_or_lock(key, once_timeout)
         except self.AlreadyQueued as e:
             if once_graceful:
-                return None
+                return EagerResult(None, None, states.REJECTED)
             raise e
         return super(QueueOnce, self).apply_async(args, kwargs, **options)
 

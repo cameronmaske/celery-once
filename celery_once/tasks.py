@@ -146,3 +146,52 @@ class QueueOnce(Task):
         if not self.get_unlock_before_run():
             key = self.get_key(args, kwargs)
             self.clear_lock(key)
+
+
+class ParametersBasedRateLimit(Task):
+    """
+    An abstract task class with the ability to rate limit tasks
+    based on their parameters.
+    When running the task (through .delay/.apply_async) the worker will check
+    if it can run the tasks by looking its parameters and rate limit option.
+    The class uses celery rate limit logic extended to support paramaters.
+
+    Example:
+
+    >>> from celery_once.tasks import ParametersBasedRateLimit
+    >>> from celery import task
+    >>> @task(base=ParametersBasedRateLimit, rate_limit="5/m",
+              rate_limit_options={"keys": ["out"]})
+    >>> def example(time, out):
+    >>>     from time import sleep
+    >>>     sleep(time)
+    """
+    Strategy = 'celery_once.strategy:rate_limit_strategy'
+    abstract = True
+    rate_limit_options = {}
+
+    def get_key(self, *args, **kwargs):
+        """
+        Generate the key from the name of the task (e.g. 'tasks.example') and
+        args/kwargs.
+        """
+        restrict_to = self.rate_limit_options.get('keys', None)
+        args = args or {}
+        kwargs = kwargs or {}
+        call_args = getcallargs(self.run, *args, **kwargs)
+        # Remove the task instance from the kwargs. This only happens when the
+        # task has the 'bind' attribute set to True. We remove it, as the task
+        # has a memory pointer in its repr, that will change between the task
+        # caller and the celery worker
+        if isinstance(call_args.get('self'), Task):
+            del call_args['self']
+        key = queue_once_key(self.name, call_args, restrict_to)
+        return key
+
+    def get_rate_limit(self, *args, **kwargs):
+        """
+        Return the rate limit of the task.
+        Subclasses can override this method to provide rate limits
+        depending on arguments.
+        """
+        return self.rate_limit

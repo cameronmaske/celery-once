@@ -21,10 +21,10 @@ Requirements
 * `Celery <http://www.celeryproject.org/>`_. Built to run with Celery 3.1. Older versions may work, but are not officially supported.
 * `Redis <http://redis.io/>`_ is used as a distributed locking mechanism.
 
-Usage
-=====
+One task at a time usage
+========================
 
-To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce``.
+To limit the task usage to one at a time, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce``.
 
 You may need to tune the following Celery configuration options...
 
@@ -170,6 +170,52 @@ By default, the lock is removed after the task has executed (using celery's `aft
     def slow_task():
         sleep(30)
         return "Done!"
+
+
+Parameters rate limit usage
+===========================
+
+To rate limit the task usage of your tasks depending on their arguments, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``ParametersBasedRateLimit``.
+
+
+.. code:: python
+
+    from celery import Celery
+    from celery_once import ParametersBasedRateLimit
+    from time import sleep
+
+    celery = Celery('tasks', broker='amqp://guest@localhost//')
+    celery.conf.ONCE_REDIS_URL = 'redis://localhost:6379/0'
+    celery.conf.ONCE_DEFAULT_TIMEOUT = 60 * 60
+
+    @celery.task(base=ParametersBasedRateLimit, rate_limit="3/m")
+    def slow_task(seconds):
+        sleep(seconds)
+        return "Done!"
+
+
+Now you will get different rate limits "environments" for each of your task with a different argument.
+You can also change the rate depending on the parameter.
+For this, you will need to subclass ``ParametersBasedRateLimit`` and override its method ``get_rate_limit``.
+This method takes as parameter the parameters of your task and should return the rate limit as a string (e.g. "5/m").
+
+Behind the scenes, the class is extending the default celery rate limit logic to add a parameter support to parameters.
+In order to extend the behavior, we implemented a custom strategy nearly identical to the default one with support of parameters.
+
+
+``keys``
+--------
+
+This does exactly the same as the option in QueueOnce.
+
+.. code:: python
+
+    @celery.task(base=ParametersBasedRateLimit,
+                 rate_limit="5/s", rate_limit_options={'keys': ['a']})
+    def slow_add(a, b):
+        sleep(30)
+        return a + b
+
 
 
 Support

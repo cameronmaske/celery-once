@@ -27,7 +27,7 @@ Usage
 To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce`` or ``QueueOnceId``.
 
 * ``QueueOnce``: Prevent execution of tasks of the same type and same parameters
-* ``QueueOnceId``: Prevent the execution of same tasks with same task_id (celery parameter)
+* ``QueueOnceId``: Prevent the execution of same tasks with same task_id (celery parameter). Arguments can be different.
 
 You may need to tune the following Celery configuration options...
 
@@ -117,8 +117,8 @@ For ``QueueOnceId``, you can use this option to get the ``AsyncResult`` of the r
 
    @celery.task(base=QueueOnceId)
     def example_id():
-        sleep(30)
         print("I am running")
+        sleep(30)
         return "Done!"
 
     result1 = example_id.apply(args=(10), once={'graceful': True}, task_id='some_id')

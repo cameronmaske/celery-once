@@ -24,7 +24,10 @@ Requirements
 Usage
 =====
 
-To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce``.
+To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce`` or ``QueueOnceId``.
+
+* QueueOnce: Prevent execution of tasks of the same type and same parameters
+* QueueOnceId: Prevent the execution of same tasks with same task_id (celery parameter)
 
 You may need to tune the following Celery configuration options...
 
@@ -35,7 +38,7 @@ You may need to tune the following Celery configuration options...
 .. code:: python
 
     from celery import Celery
-    from celery_once import QueueOnce
+    from celery_once import QueueOnce, QueueOnceId
     from time import sleep
 
     celery = Celery('tasks', broker='amqp://guest@localhost//')
@@ -46,6 +49,12 @@ You may need to tune the following Celery configuration options...
     def slow_task():
         sleep(30)
         return "Done!"
+
+    @celery.task(base=QueueOnceId)
+    def slow_task_with_id():
+        sleep(30)
+        return "Done!"
+
 
 
 Behind the scenes, this overrides ``apply_async`` and ``delay``. It does not affect calling the tasks directly.
@@ -66,6 +75,16 @@ If an attempt is made to run the task again before it completes an ``AlreadyQueu
 
     result = example.apply_async(args=(10))
     result = example.apply_async(args=(10))
+    Traceback (most recent call last):
+        ..
+    AlreadyQueued()
+
+Note that some_task.delay() will not be supported for QueueOnceId because the id is unknown. Use apply_async instead.
+
+.. code:: python
+
+    result = example.apply_async(args=(10), task_id='some_id')
+    result = example.apply_async(args=(10), task_id='some_id')
     Traceback (most recent call last):
         ..
     AlreadyQueued()
@@ -92,11 +111,31 @@ Optionally, instead of raising an ``AlreadyQueued`` exception, the task can retu
         sleep(30)
         return "Done!"
 
+For QueueOnceId, you can use this option to get the AsyncResult of the requested it. This way it will be transparent to the caller whether the task has been created or not.
 
-``keys``
+.. code:: python
+   @celery.task(base=QueueOnceId)
+    def example_id():
+        sleep(30)
+        print("I am running")
+        return "Done!"
+
+    result1 = example_id.apply(args=(10), once={'graceful': True}, task_id='some_id')
+    result2 = example_id.apply(args=(10), once={'graceful': True}, task_id='some_id')
+
+    print(result1.get())
+    print(result2.get())
+
+Will output:
+
+I am running
+Done!
+Done!
+
+``keys (QueueOnce only)``
 --------
 
-By default ``celery_once`` creates a lock based on the task's name and its arguments and values.
+By default ``QueueOnce`` creates a lock based on the task's name and its arguments and values.
 Take for example, the following task below...
 
 .. code:: python
@@ -157,7 +196,7 @@ This is set globally in Celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but
         sleep(60 * 60 * 3)
 
 
-``unlock_before_run``
+``unlock_before_run (QueueOnce only)``
 ---------------------
 
 By default, the lock is removed after the task has executed (using celery's `after_return <https://celery.readthedocs.org/en/latest/reference/celery.app.task.html#celery.app.task.Task.after_return>`_). This behaviour can be changed setting the task's option ``unlock_before_run``. When set to ``True``, the lock will be removed just before executing the task.

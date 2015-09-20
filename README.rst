@@ -111,7 +111,7 @@ Optionally, instead of raising an ``AlreadyQueued`` exception, the task can retu
         sleep(30)
         return "Done!"
 
-For ``QueueOnceId``, you can use this option to get the ``AsyncResult`` of the requested it. This way it will be transparent to the caller whether the task has been created or not.
+For ``QueueOnceId``, you can use this option to get the ``AsyncResult`` of already running task with same id. This way it will be transparent to the caller whether the task has been created or not.
 
 .. code:: python
 

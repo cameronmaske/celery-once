@@ -128,9 +128,9 @@ For ``QueueOnceId``, you can use this option to get the ``AsyncResult`` of the r
 
 Will output:
 
-*I am running
-*Done!
-*Done!
+* I am running
+* Done!
+* Done!
 
 ``keys (QueueOnce only)``
 --------

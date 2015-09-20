@@ -44,7 +44,7 @@ class QueueOnceBase(Task):
             self.config, "ONCE_DEFAULT_TIMEOUT", 60 * 60)
 
     def apply_async(self, args=None, kwargs=None, **options):
-        raise Exception("Cannot run abstract task")
+        raise TypeError("Cannot run abstract task")
 
     def raise_or_lock(self, key, expires):
         """

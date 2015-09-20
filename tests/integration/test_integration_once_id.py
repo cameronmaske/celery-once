@@ -32,6 +32,13 @@ def test_no_id(redis):
     except ValueError:
         pass
 
+def test_no_id(redis):
+    try:
+        example.apply_async(args=(redis, ), task_id='')
+        pytest.fail("QueueOnceId was started without a specified task_id")
+    except ValueError:
+        pass
+
 def test_no_id_delay(redis):
     try:
         example.delay(redis, 1)

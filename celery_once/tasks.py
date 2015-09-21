@@ -199,7 +199,6 @@ class QueueOnceId(QueueOnceBase):
             :param: timeout: (optional)
                 An `int' number of seconds after which the lock will expire.
                 If not set, defaults to 1 hour.
-            :param: keys: (optional)
 
         """
         if 'task_id' not in options:
@@ -220,16 +219,14 @@ class QueueOnceId(QueueOnceBase):
             self.raise_or_lock(key, once_timeout)
         except self.AlreadyQueued as e:
             if once_graceful:
-                return AsyncResult(options.get('task_id'))
+                return AsyncResult(task_id)
             raise e
         return super(QueueOnceBase, self).apply_async(args, kwargs, **options)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
         After a task has run (both succesfully or with a failure) clear the
-        lock if "unlock_before_run" is False.
+        lock.
         """
-        # Only clear the lock after the task's execution if the
-        # "unlock_before_run" option is False
         key = self.get_key(task_id)
         self.clear_lock(key)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from celery import Task, states
-from celery.result import EagerResult
+from celery.result import EagerResult, AsyncResult
 from inspect import getcallargs
 from .helpers import queue_once_key, get_redis, now_unix
 
@@ -11,7 +11,7 @@ class AlreadyQueued(Exception):
         self.countdown = countdown
 
 
-class QueueOnce(Task):
+class QueueOnceBase(Task):
     AlreadyQueued = AlreadyQueued
     once = {
         'graceful': False,
@@ -23,18 +23,7 @@ class QueueOnce(Task):
 
     An abstract tasks with the ability to detect if it has already been queued.
     When running the task (through .delay/.apply_async) it checks if the tasks
-    is not already queued. By default it will raise an
-    an AlreadyQueued exception if it is, by you can silence this by including
-    `options={'graceful': True}` in apply_async or in the task's settings.
-
-    Example:
-
-    >>> from celery_queue.tasks import QueueOnce
-    >>> from celery import task
-    >>> @task(base=QueueOnce, once={'graceful': True})
-    >>> def example(time):
-    >>>     from time import sleep
-    >>>     sleep(time)
+    is not already queued.
     """
     abstract = True
     once = {}
@@ -55,53 +44,7 @@ class QueueOnce(Task):
             self.config, "ONCE_DEFAULT_TIMEOUT", 60 * 60)
 
     def apply_async(self, args=None, kwargs=None, **options):
-        """
-        Queues a task, raises an exception by default if already queued.
-
-        :param \*args: positional arguments passed on to the task.
-        :param \*\*kwargs: keyword arguments passed on to the task.
-        :keyword \*\*once: (optional)
-            :param: graceful: (optional)
-                If True, wouldn't raise an exception if already queued.
-                Instead will return none.
-            :param: timeout: (optional)
-                An `int' number of seconds after which the lock will expire.
-                If not set, defaults to 1 hour.
-            :param: keys: (optional)
-
-        """
-        once_options = options.get('once', {})
-        once_graceful = once_options.get(
-            'graceful', self.once.get('graceful', False))
-        once_timeout = once_options.get(
-            'timeout', self.once.get('timeout', self.default_timeout))
-
-        key = self.get_key(args, kwargs)
-        try:
-            self.raise_or_lock(key, once_timeout)
-        except self.AlreadyQueued as e:
-            if once_graceful:
-                return EagerResult(None, None, states.REJECTED)
-            raise e
-        return super(QueueOnce, self).apply_async(args, kwargs, **options)
-
-    def get_key(self, args=None, kwargs=None):
-        """
-        Generate the key from the name of the task (e.g. 'tasks.example') and
-        args/kwargs.
-        """
-        restrict_to = self.once.get('keys', None)
-        args = args or {}
-        kwargs = kwargs or {}
-        call_args = getcallargs(self.run, *args, **kwargs)
-        # Remove the task instance from the kwargs. This only happens when the
-        # task has the 'bind' attribute set to True. We remove it, as the task
-        # has a memory pointer in its repr, that will change between the task
-        # caller and the celery worker
-        if isinstance(call_args.get('self'), Task):
-            del call_args['self']
-        key = queue_once_key(self.name, call_args, restrict_to)
-        return key
+        raise TypeError("Cannot run abstract task")
 
     def raise_or_lock(self, key, expires):
         """
@@ -124,6 +67,26 @@ class QueueOnce(Task):
     def get_unlock_before_run(self):
         return self.once.get('unlock_before_run', False)
 
+    def clear_lock(self, key):
+        self.redis.delete(key)
+
+
+class QueueOnce(QueueOnceBase):
+    """
+    Creates a singleton task using its parameters or a subset of them.
+    By default it will raise an AlreadyQueued exception but you can silence this by including
+    `options={'graceful': True}` in apply_async or in the task's settings.
+    In that case it will return None.
+
+    Example:
+
+         from celery_queue.tasks import QueueOnce
+         from celery import task
+         @task(base=QueueOnce, once={'graceful': True})
+         def example(time):
+             from time import sleep
+            sleep(time)
+    """
     def __call__(self, *args, **kwargs):
         # Only clear the lock before the task's execution if the
         # "unlock_before_run" option is True
@@ -131,10 +94,7 @@ class QueueOnce(Task):
             key = self.get_key(args, kwargs)
             self.clear_lock(key)
 
-        return super(QueueOnce, self).__call__(*args, **kwargs)
-
-    def clear_lock(self, key):
-        self.redis.delete(key)
+        return super(QueueOnceBase, self).__call__(*args, **kwargs)
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
@@ -146,3 +106,127 @@ class QueueOnce(Task):
         if not self.get_unlock_before_run():
             key = self.get_key(args, kwargs)
             self.clear_lock(key)
+
+    def get_key(self, args=None, kwargs=None):
+        """
+        Generate the key from the name of the task (e.g. 'tasks.example') and
+        args/kwargs.
+        """
+        restrict_to = self.once.get('keys', None)
+        args = args or {}
+        kwargs = kwargs or {}
+        call_args = getcallargs(self.run, *args, **kwargs)
+        # Remove the task instance from the kwargs. This only happens when the
+        # task has the 'bind' attribute set to True. We remove it, as the task
+        # has a memory pointer in its repr, that will change between the task
+        # caller and the celery worker
+        if isinstance(call_args.get('self'), Task):
+            del call_args['self']
+        key = queue_once_key(self.name, call_args, restrict_to)
+        return key
+
+    def apply_async(self, args=None, kwargs=None, **options):
+        """
+        Queues a task, raises an exception by default if already queued.
+
+        :param \*args: positional arguments passed on to the task.
+        :param \*\*kwargs: keyword arguments passed on to the task.
+        :keyword \*\*once: (optional)
+            :param: graceful: (optional)
+                If True, wouldn't raise an exception if already queued.
+                Instead will return none.
+            :param: timeout: (optional)
+                An `int' number of seconds after which the lock will expire.
+                If not set, defaults to 1 hour.
+            :param: unlock_before_run:
+                Remove the redis lock as soon as the task has started.
+            :param: keys: (optional)
+
+        """
+        once_options = options.get('once', {})
+        once_graceful = once_options.get(
+            'graceful', self.once.get('graceful', False))
+        once_timeout = once_options.get(
+            'timeout', self.once.get('timeout', self.default_timeout))
+
+        key = self.get_key(args, kwargs)
+        try:
+            self.raise_or_lock(key, once_timeout)
+        except self.AlreadyQueued as e:
+            if once_graceful:
+                return EagerResult(None, None, states.REJECTED)
+            raise e
+        return super(QueueOnceBase, self).apply_async(args, kwargs, **options)
+
+
+
+class QueueOnceId(QueueOnceBase):
+
+    """
+    Creates a singleton task using its id.
+    By default it will raise an AlreadyQueued exception but you can silence this by including
+    `options={'graceful': True}` in apply_async or in the task's settings.
+    In that case it will return an asynchronous result of the task_id.
+
+    Example:
+
+         from celery_queue.tasks import QueueOnceId
+         from celery import task
+         @task(base=QueueOnceId, once={'graceful': True})
+         def example(time):
+             from time import sleep
+             sleep(time)
+    """
+
+    def get_key(self, task_id):
+        """
+        Generate the key from the id of the task
+        """
+        keys = ['qo', self.name, str(task_id)]
+        return '_'.join(keys)
+
+    def apply_async(self, args=None, kwargs=None, **options):
+        """
+        Queues a task using its task_id, raises an exception by default if already queued.
+        The task_id must be set for this task type.
+
+        :param \*args: positional arguments passed on to the task.
+        :param \*\*kwargs: keyword arguments passed on to the task.
+        :keyword \*\*once: (optional)
+            :param: graceful: (optional)
+                If True, wouldn't raise an exception if already queued.
+                Instead will return AsyncResult(task_id).
+            :param: timeout: (optional)
+                An `int' number of seconds after which the lock will expire.
+                If not set, defaults to 1 hour.
+
+        """
+        if 'task_id' not in options:
+            raise ValueError("You must select a task id in order to use QueueOnceId")
+        task_id = str(options.get('task_id'))
+
+        if task_id == '':
+            raise ValueError("You must select a task id in order to use QueueOnceId")
+
+        once_options = options.get('once', {})
+        once_graceful = once_options.get(
+            'graceful', self.once.get('graceful', False))
+        once_timeout = once_options.get(
+            'timeout', self.once.get('timeout', self.default_timeout))
+
+        key = self.get_key(task_id)
+        try:
+            self.raise_or_lock(key, once_timeout)
+        except self.AlreadyQueued as e:
+            if once_graceful:
+                return AsyncResult(task_id)
+            raise e
+        return super(QueueOnceBase, self).apply_async(args, kwargs, **options)
+
+    def after_return(self, status, retval, task_id, args, kwargs, einfo):
+        """
+        After a task has run (both succesfully or with a failure) clear the
+        lock.
+        """
+        key = self.get_key(task_id)
+        self.clear_lock(key)

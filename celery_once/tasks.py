@@ -190,7 +190,7 @@ class QueueOnceId(QueueOnceBase):
         return '_'.join(keys)
 
     def get_key_from_arguments(self, args, kwargs):
-        return self.__name__ + '_' + str(base64.b64encode(self.get_key(args, kwargs)).decode('ascii'))
+        return self.__name__ + '_' + str(base64.b64encode(self.get_key(args, kwargs).encode('utf-8')).decode('ascii'))
 
     def apply_async(self, args=None, kwargs=None, **options):
         """

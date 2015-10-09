@@ -27,7 +27,7 @@ Usage
 To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce`` or ``QueueOnceId``.
 
 * ``QueueOnce``: Prevent execution of tasks of the same type and same parameters
-* ``QueueOnceId``: Prevent the execution of same tasks with same task_id (celery parameter). Arguments can be different.
+* ``QueueOnceId``: Prevent the execution of same tasks with same task_id (celery parameter). If the task_id is not passed by the user, it generates one using its parameters. Note that this will override the default celery id generation.
 
 You may need to tune the following Celery configuration options...
 
@@ -79,8 +79,6 @@ If an attempt is made to run the task again before it completes an ``AlreadyQueu
         ..
     AlreadyQueued()
 
-Note that ``some_task.delay()`` will not be supported for ``QueueOnceId`` because the id is unknown. Use ``apply_async`` instead.
-
 .. code:: python
 
     result = example.apply_async(args=(10), task_id='some_id')
@@ -111,7 +109,7 @@ Optionally, instead of raising an ``AlreadyQueued`` exception, the task can retu
         sleep(30)
         return "Done!"
 
-For ``QueueOnceId``, you can use this option to get the ``AsyncResult`` of already running task with same id. This way it will be transparent to the caller whether the task has been created or not.
+For ``QueueOnceId``, you can use this option to get the ``AsyncResult`` of already running task. This way it will be transparent to the caller whether the task has been created or not.
 
 .. code:: python
 

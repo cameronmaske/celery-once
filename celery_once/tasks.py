@@ -189,6 +189,9 @@ class QueueOnceId(QueueOnceBase):
         keys = ['qo', self.name, str(task_id)]
         return '_'.join(keys)
 
+    def get_key_from_arguments(self, args, kwargs):
+        return self.__name__ + '_' + str(base64.b64encode(self.get_key(args, kwargs)).decode('ascii'))
+
     def apply_async(self, args=None, kwargs=None, **options):
         """
         Queues a task using its task_id, raises an exception by default if already queued.
@@ -207,7 +210,7 @@ class QueueOnceId(QueueOnceBase):
         """
 
         if 'task_id' not in options:
-            task_id = self.__name__ + '_' + str(base64.b64encode(self.get_key(args, kwargs).encode('utf-8')))
+            task_id = self.get_key_from_arguments(args, kwargs)
             options['task_id'] = task_id
         else:
             task_id = str(options.get('task_id'))
@@ -240,5 +243,5 @@ class QueueOnceId(QueueOnceBase):
         if self.task_id_given:
             key = self.get_key_from_id(task_id)
         else:
-            key = self.__name__ + '_' + str(base64.b64encode(self.get_key(args, kwargs).encode('utf-8')))
+            key = self.get_key_from_arguments(args, kwargs)
         self.clear_lock(key)

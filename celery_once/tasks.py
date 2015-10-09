@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+import base64
 from celery import Task, states
 from celery.result import EagerResult, AsyncResult
 from inspect import getcallargs
+
 from .helpers import queue_once_key, get_redis, now_unix
 
 
@@ -70,6 +72,23 @@ class QueueOnceBase(Task):
     def clear_lock(self, key):
         self.redis.delete(key)
 
+    def get_key(self, args=None, kwargs=None):
+        """
+        Generate the key from the name of the task (e.g. 'tasks.example') and
+        args/kwargs.
+        """
+        restrict_to = self.once.get('keys', None)
+        args = args or {}
+        kwargs = kwargs or {}
+        call_args = getcallargs(self.run, *args, **kwargs)
+        # Remove the task instance from the kwargs. This only happens when the
+        # task has the 'bind' attribute set to True. We remove it, as the task
+        # has a memory pointer in its repr, that will change between the task
+        # caller and the celery worker
+        if isinstance(call_args.get('self'), Task):
+            del call_args['self']
+        key = queue_once_key(self.name, call_args, restrict_to)
+        return key
 
 class QueueOnce(QueueOnceBase):
     """
@@ -107,23 +126,6 @@ class QueueOnce(QueueOnceBase):
             key = self.get_key(args, kwargs)
             self.clear_lock(key)
 
-    def get_key(self, args=None, kwargs=None):
-        """
-        Generate the key from the name of the task (e.g. 'tasks.example') and
-        args/kwargs.
-        """
-        restrict_to = self.once.get('keys', None)
-        args = args or {}
-        kwargs = kwargs or {}
-        call_args = getcallargs(self.run, *args, **kwargs)
-        # Remove the task instance from the kwargs. This only happens when the
-        # task has the 'bind' attribute set to True. We remove it, as the task
-        # has a memory pointer in its repr, that will change between the task
-        # caller and the celery worker
-        if isinstance(call_args.get('self'), Task):
-            del call_args['self']
-        key = queue_once_key(self.name, call_args, restrict_to)
-        return key
 
     def apply_async(self, args=None, kwargs=None, **options):
         """
@@ -178,7 +180,9 @@ class QueueOnceId(QueueOnceBase):
              sleep(time)
     """
 
-    def get_key(self, task_id):
+    task_id_given = False
+
+    def get_key_from_id(self, task_id):
         """
         Generate the key from the id of the task
         """
@@ -201,12 +205,16 @@ class QueueOnceId(QueueOnceBase):
                 If not set, defaults to 1 hour.
 
         """
+
         if 'task_id' not in options:
-            raise ValueError("You must select a task id in order to use QueueOnceId")
-        task_id = str(options.get('task_id'))
+            task_id = self.__name__ + '_' + str(base64.b64encode(self.get_key(args, kwargs).encode('utf-8')))
+            options['task_id'] = task_id
+        else:
+            task_id = str(options.get('task_id'))
+            self.task_id_given = True
 
         if task_id == '':
-            raise ValueError("You must select a task id in order to use QueueOnceId")
+            raise ValueError("Could not generate a valid task_id")
 
         once_options = options.get('once', {})
         once_graceful = once_options.get(
@@ -214,7 +222,7 @@ class QueueOnceId(QueueOnceBase):
         once_timeout = once_options.get(
             'timeout', self.once.get('timeout', self.default_timeout))
 
-        key = self.get_key(task_id)
+        key = self.get_key_from_id(task_id)
         try:
             self.raise_or_lock(key, once_timeout)
         except self.AlreadyQueued as e:
@@ -225,8 +233,12 @@ class QueueOnceId(QueueOnceBase):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
-        After a task has run (both succesfully or with a failure) clear the
+        After a task has run (both successfully or with a failure) clear the
         lock.
         """
-        key = self.get_key(task_id)
+
+        if self.task_id_given:
+            key = self.get_key_from_id(task_id)
+        else:
+            key = self.__name__ + '_' + str(base64.b64encode(self.get_key(args, kwargs).encode('utf-8')))
         self.clear_lock(key)

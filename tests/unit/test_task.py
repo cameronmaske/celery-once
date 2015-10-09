@@ -81,7 +81,7 @@ def task_id_example(a, b):
     return a + b
 
 def test_task_id_key():
-    assert "qo_task_id_example_a_key" == task_id_example.get_key(task_id='a_key')
+    assert "qo_task_id_example_a_key" == task_id_example.get_key_from_id(task_id='a_key')
 
 def test_task_id_key_num():
-    assert "qo_task_id_example_10" == task_id_example.get_key(task_id=10)
+    assert "qo_task_id_example_10" == task_id_example.get_key_from_id(task_id=10)

@@ -1,5 +1,5 @@
 from celery import task
-from celery_once.tasks import QueueOnce, AlreadyQueued
+from celery_once.tasks import QueueOnce, AlreadyQueued, QueueOnceId
 from freezegun import freeze_time
 import pytest
 
@@ -75,3 +75,13 @@ def test_clear_lock(redis):
     assert redis.get("test") is None
 
 
+# QueueOnceId
+@task(name='task_id_example', base=QueueOnceId, once={'keys': ['a']})
+def task_id_example(a, b):
+    return a + b
+
+def test_task_id_key():
+    assert "qo_task_id_example_a_key" == task_id_example.get_key_from_id(task_id='a_key')
+
+def test_task_id_key_num():
+    assert "qo_task_id_example_10" == task_id_example.get_key_from_id(task_id=10)

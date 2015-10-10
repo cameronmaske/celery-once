@@ -7,5 +7,5 @@ import pytest
 def redis(monkeypatch):
     fake_redis = FakeStrictRedis()
     fake_redis.flushall()
-    monkeypatch.setattr("celery_once.tasks.QueueOnce.redis", fake_redis)
+    monkeypatch.setattr("celery_once.tasks.QueueOnceBase.redis", fake_redis)
     return fake_redis

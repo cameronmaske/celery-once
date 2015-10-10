@@ -1,5 +1,6 @@
 from celery import Celery
 from celery_once import QueueOnce, AlreadyQueued
+from celery_once.tasks import QueueOnceBase
 from freezegun import freeze_time
 import pytest
 
@@ -9,6 +10,9 @@ app.conf.ONCE_REDIS_URL = 'redis://localhost:1337/0'
 app.conf.ONCE_DEFAULT_TIMEOUT = 30 * 60
 app.conf.CELERY_ALWAYS_EAGER = True
 
+@app.task(name="example_abstract", base=QueueOnceBase, once={'keys': ['a']})
+def example_abstract(redis, a=1):
+    return redis.get("qo_example_a-1")
 
 @app.task(name="example", base=QueueOnce, once={'keys': ['a']})
 def example(redis, a=1):
@@ -24,6 +28,12 @@ def example_unlock_before_run_set_key(redis, a=1):
     redis.set("qo_example_unlock_before_run_set_key_a-1", b"1234")
     return result
 
+def test_abstract(redis):
+    try:
+        example_abstract.delay(redis)
+        pytest.fail("Didn't raise TypeError.")
+    except TypeError:
+        pass
 
 def test_delay_1(redis):
     result = example.delay(redis)

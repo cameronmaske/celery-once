@@ -9,6 +9,20 @@ except:
 import six
 
 
+def cached_celery_property(f):
+    """
+    Cache a property at the celery application level.
+    """
+    attr_name = '_cached_' + f.__name__
+
+    @property
+    def _cached_property(self):
+        if not hasattr(self.app, attr_name):
+            setattr(self.app, attr_name, f(self))
+        return getattr(self.app, attr_name)
+    return _cached_property
+
+
 def parse_redis_details(url):
     parsed = urlparse(url)
     details = {

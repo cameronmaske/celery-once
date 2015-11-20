@@ -2,7 +2,7 @@
 from celery import Task, states
 from celery.result import EagerResult
 from inspect import getcallargs
-from .helpers import queue_once_key, get_redis, now_unix
+from .helpers import queue_once_key, get_redis, now_unix, cached_celery_property
 
 
 class AlreadyQueued(Exception):
@@ -44,8 +44,16 @@ class QueueOnce(Task):
         app = self._get_app()
         return app.conf
 
-    @property
+    @cached_celery_property
     def redis(self):
+        """
+        Return a connection pool to redis.
+
+        This property is cached at the celery app level, so that only the first
+        executed QueueOnce task needs to instanciate a redis connection. The
+        other ones will only re-use it.
+
+        """
         return get_redis(
             getattr(self.config, "ONCE_REDIS_URL", "redis://localhost:6379/0"))
 

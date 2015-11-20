@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from celery_once.helpers import queue_once_key, kwargs_to_list, force_string
+from celery_once.helpers import queue_once_key, kwargs_to_list, force_string,\
+    parse_redis_details
 
 import pytest
 import six
@@ -92,3 +93,42 @@ def test_queue_once_key_unicode_py2():
 def test_queue_once_key_unicode_py3():
     key = queue_once_key(u"éxample", {'a': u'é', u'b': 'é'})
     assert key == "qo_éxample_a-é_b-é"
+
+
+def test_parse_redis_details_tcp_default_args():
+    details = parse_redis_details('redis://localhost:6379/')
+    assert details == {'host': 'localhost', 'port': 6379}
+
+
+def test_parse_redis_details_tcp_with_db():
+    details = parse_redis_details('redis://localhost:6379/3')
+    assert details == {'host': 'localhost', 'port': 6379, 'db': 3}
+
+
+def test_parse_redis_details_tcp_no_port():
+    details = parse_redis_details('redis://localhost')
+    assert details == {'host': 'localhost'}
+
+
+def test_parse_redis_details_tcp_with_password():
+    details = parse_redis_details('redis://:ohai@localhost:6379')
+    assert details == {'host': 'localhost', 'port': 6379, 'password': 'ohai'}
+
+
+def test_parse_redis_details_unix_sock_no_options():
+    details = parse_redis_details('redis+socket:///var/run/redis/redis.sock')
+    assert details == {'unix_socket_path': '/var/run/redis/redis.sock'}
+
+
+def test_parse_redis_details_unix_sock_with_options():
+    details = parse_redis_details('redis+socket:///var/run/redis/redis.sock?db=2&socket_timeout=2')
+    assert details == {
+        'unix_socket_path': '/var/run/redis/redis.sock',
+        'db': 2,
+        'socket_timeout': 2.0
+    }
+
+
+def test_parse_unsupported_url():
+    with pytest.raises(ValueError):
+        parse_redis_details('amqp://guest:guest@localhost:5672/potato')

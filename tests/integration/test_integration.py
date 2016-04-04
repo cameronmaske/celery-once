@@ -93,6 +93,7 @@ def test_apply_async_unlock_before_run_2(redis):
     assert redis.get("qo_example_unlock_before_run_set_key_a-1") == b"1234"
 
 
+@pytest.mark.xfail
 def test_chain_requeued(redis):
     redis.setex("qo_example_a-1", 10000000000, 1)
 

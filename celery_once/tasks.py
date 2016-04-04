@@ -9,7 +9,7 @@ class AlreadyQueued(Exception):
     def __init__(self, countdown, result=None):
         self.message = "Expires in {} seconds".format(countdown)
         self.countdown = countdown
-        self.result = AsyncResult(int(result))
+        self.result = AsyncResult(result)
 
 
 class QueueOnce(Task):

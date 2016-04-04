@@ -57,7 +57,7 @@ def test_raise_or_lock_locked(redis):
         QueueOnce().raise_or_lock(key="test", expires=60)
     assert e.value.countdown == 30
     assert e.value.message == "Expires in 30.0 seconds"
-    assert e.value.result.id == 1
+    assert e.value.result.id == '1'
 
 def test_raise_or_lock_locked_and_expired(redis):
     # Set to have expired 30 ago seconds!

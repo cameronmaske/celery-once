@@ -1,7 +1,7 @@
 from celery import Celery
 from celery_once import QueueOnce, AlreadyQueued
 import pytest
-
+import mock
 
 app = Celery()
 app.conf.ONCE_REDIS_URL = 'redis://localhost:1337/0'
@@ -98,10 +98,9 @@ def test_chain_requeued(redis):
 
     # Chaining with always eager on will funnel the request into apply, but
     # we want to test what occurs when apply_async is called.
-    example.apply = example.apply_async
-
-    with pytest.raises(AlreadyQueued):
-        (example.s(redis, 1) | example_chained_task.s(redis)).apply_async()
+    with mock.patch('celery_once.tasks.QueueOnce.apply', new=example.apply_async):
+        with pytest.raises(AlreadyQueued):
+            (example.s(redis, 1) | example_chained_task.s(redis)).apply_async()
     assert redis.get("called") == 1
 
 

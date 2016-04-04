@@ -23,6 +23,10 @@ def example_unlock_before_run_set_key(redis, a=1):
     redis.set("qo_example_unlock_before_run_set_key_a-1", b"1234")
     return result
 
+@app.task(name="example_chained_task")
+def example_chained_task(redis):
+    redis.set("called", 1)
+
 
 def test_delay_1(redis):
     result = example.delay(redis)
@@ -81,6 +85,18 @@ def test_apply_async_unlock_before_run_2(redis):
     result = example_unlock_before_run_set_key.apply_async(args=(redis, ))
     assert result.get() is None
     assert redis.get("qo_example_unlock_before_run_set_key_a-1") == b"1234"
+
+
+def test_chain_requeued(redis):
+    redis.setex("qo_example_a-1", 10000000000, 1)
+
+    # Chaining with always eager on will funnel the request into apply, but
+    # we want to test what occurs when apply_async is called.
+    example.apply = example.apply_async
+
+    with pytest.raises(AlreadyQueued):
+        (example.s(redis, 1) | example_chained_task.s(redis)).apply_async()
+    assert redis.get("called") == 1
 
 
 def test_apply_async_4(redis):

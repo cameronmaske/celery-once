@@ -61,7 +61,7 @@ def test_raise_or_lock_locked(redis):
 
 def test_raise_or_lock_locked_and_expired(redis):
     # Set to have expired 30 ago seconds!
-    redis.set("test", 1326499200 - 30)
+    redis.setex("test", -30, 1)
     QueueOnce().raise_or_lock(key="test", expires=60)
     assert redis.get("test") is not None
     assert redis.ttl("test") == 60

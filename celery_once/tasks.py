@@ -115,7 +115,7 @@ class QueueOnce(Task):
         if result:
             # Work out how many seconds remaining till the task expires.
             remaining = self.redis.ttl(key)
-            if remaining > 0:
+            if remaining and remaining > 0:
                 raise self.AlreadyQueued(remaining, result)
 
         # By default, the tasks and redis key expire after 60 minutes.

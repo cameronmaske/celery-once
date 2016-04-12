@@ -76,13 +76,14 @@ class QueueOnce(Task):
         once_timeout = once_options.get(
             'timeout', self.once.get('timeout', self.default_timeout))
 
-        key = self.get_key(args, kwargs)
-        try:
-            self.raise_or_lock(key, once_timeout)
-        except self.AlreadyQueued as e:
-            if once_graceful:
-                return EagerResult(None, None, states.REJECTED)
-            raise e
+        if not options.get('retries'):
+            key = self.get_key(args, kwargs)
+            try:
+                self.raise_or_lock(key, once_timeout)
+            except self.AlreadyQueued as e:
+                if once_graceful:
+                    return EagerResult(None, None, states.REJECTED)
+                raise e
         return super(QueueOnce, self).apply_async(args, kwargs, **options)
 
     def get_key(self, args=None, kwargs=None):

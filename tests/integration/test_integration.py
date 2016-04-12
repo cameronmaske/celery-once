@@ -24,6 +24,11 @@ def example_unlock_before_run_set_key(redis, a=1):
     redis.set("qo_example_unlock_before_run_set_key_a-1", b"1234")
     return result
 
+@app.task(name="example_retry", base=QueueOnce, once={'keys': []}, bind=True)
+def example_retry(self, redis, a=1):
+    if a > 0:
+        self.request.called_directly = False
+        self.retry(redis, a=0)
 
 def test_delay_1(redis):
     result = example.delay(redis)
@@ -97,3 +102,7 @@ def test_redis():
 
 def test_default_timeout():
     assert example.default_timeout == 30 * 60
+
+def test_retry(redis):
+    result = example_retry.apply_async(args=(redis, ))
+    assert redis.get("qo_example_retry") is None

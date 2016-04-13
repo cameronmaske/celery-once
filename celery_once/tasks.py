@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 from celery import Task, states
-from celery.result import EagerResult
+from celery.result import AsyncResult, EagerResult
 from inspect import getcallargs
 from .helpers import queue_once_key, get_redis, now_unix
 
 
 class AlreadyQueued(Exception):
-    def __init__(self, countdown):
+    def __init__(self, countdown, result=None):
         self.message = "Expires in {} seconds".format(countdown)
         self.countdown = countdown
+        self.result = AsyncResult(result)
 
 
 class QueueOnce(Task):
@@ -114,9 +115,9 @@ class QueueOnce(Task):
         result = self.redis.get(key)
         if result:
             # Work out how many seconds remaining till the task expires.
-            remaining = int(result) - now
-            if remaining > 0:
-                raise self.AlreadyQueued(remaining)
+            remaining = self.redis.ttl(key)
+            if remaining and remaining > 0:
+                raise self.AlreadyQueued(remaining, result)
 
         # By default, the tasks and redis key expire after 60 minutes.
         # (meaning it will not be executed and the lock will clear).

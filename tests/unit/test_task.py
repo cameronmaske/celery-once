@@ -56,12 +56,12 @@ def test_raise_or_lock_locked(redis):
     with pytest.raises(AlreadyQueued) as e:
         QueueOnce().raise_or_lock(key="test", expires=60)
     assert e.value.countdown == 30
-    assert e.value.message == "Expires in 30.0 seconds"
-    assert e.value.result.id == 1
+    assert e.value.message == "Expires in {} seconds".format(e.value.countdown)
+    assert e.value.result.id == b'1'
 
 def test_raise_or_lock_locked_and_expired(redis):
     # Set to have expired 30 ago seconds!
-    redis.set("test", 1326499200 - 30)
+    redis.setex("test", -30, 1)
     QueueOnce().raise_or_lock(key="test", expires=60)
     assert redis.get("test") is not None
     assert redis.ttl("test") == 60

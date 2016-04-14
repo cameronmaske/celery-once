@@ -80,7 +80,7 @@ class QueueOnce(Task):
         if not options.get('retries'):
             key = self.get_key(args, kwargs)
             try:
-                self.raise_or_lock(key, once_timeout)
+                self.raise_or_lock(key, once_timeout, options)
             except self.AlreadyQueued as e:
                 if once_graceful:
                     return EagerResult(None, None, states.REJECTED)
@@ -105,19 +105,21 @@ class QueueOnce(Task):
         key = queue_once_key(self.name, call_args, restrict_to)
         return key
 
-    def raise_or_lock(self, key, expires):
+    def raise_or_lock(self, key, expires, options={}):
         """
         Checks if the task is locked and raises an exception, else locks
         the task.
         """
         now = now_unix()
         # Check if the tasks is already queued if key is in redis.
-        result = self.redis.get(key)
-        if result:
+        result_id = self.redis.get(key)
+        if result_id:
             # Work out how many seconds remaining till the task expires.
             remaining = self.redis.ttl(key)
             if remaining and remaining > 0:
-                raise self.AlreadyQueued(remaining, result)
+                if options.get('link') and hasattr(self.app.conf, 'ONCE_REQUEUE_SUBSEQUENT_TASKS'):
+                    self.app.conf.ONCE_REQUEUE_SUBSEQUENT_TASKS.apply_async(args=(result_id,), link=options.get('link'))
+                raise self.AlreadyQueued(remaining, result_id)
 
         # By default, the tasks and redis key expire after 60 minutes.
         # (meaning it will not be executed and the lock will clear).

@@ -1,9 +1,9 @@
-from celery import Celery
+from celery_once.app import CeleryOnce
 from celery_once import QueueOnce, AlreadyQueued
 import pytest
 import mock
 
-app = Celery()
+app = CeleryOnce()
 app.conf.ONCE_REDIS_URL = 'redis://localhost:1337/0'
 app.conf.ONCE_DEFAULT_TIMEOUT = 30 * 60
 app.conf.CELERY_ALWAYS_EAGER = True
@@ -91,18 +91,6 @@ def test_apply_async_unlock_before_run_2(redis):
     result = example_unlock_before_run_set_key.apply_async(args=(redis, ))
     assert result.get() is None
     assert redis.get("qo_example_unlock_before_run_set_key_a-1") == b"1234"
-
-
-@pytest.mark.xfail
-def test_chain_requeued(redis):
-    redis.setex("qo_example_a-1", 10000000000, 1)
-
-    # Chaining with always eager on will funnel the request into apply, but
-    # we want to test what occurs when apply_async is called.
-    with mock.patch('celery_once.tasks.QueueOnce.apply', new=example.apply_async):
-        with pytest.raises(AlreadyQueued):
-            (example.s(redis, 1) | example_chained_task.s(redis)).apply_async()
-    assert redis.get("called") == 1
 
 
 def test_apply_async_4(redis):

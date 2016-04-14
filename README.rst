@@ -171,6 +171,18 @@ By default, the lock is removed after the task has executed (using celery's `aft
         sleep(30)
         return "Done!"
 
+Chaining
+--------
+
+Chaining off of an AlreadyQueued task will result in the subsequent tasks never being executed. To solve this problem, use the CeleryOnce instead of Celery when creating your app:
+
+.. code:: python
+
+    from celery_once.app import CeleryOnce
+
+    celery = CeleryOnce('tasks', broker='amqp://guest@localhost//')
+
+This will create an additional task which is called with the same callback as the task which threw AlreadyQueued. This will retry if the AlreadyQueued task is not ready, and if it is reraise any errors or rereturn any value.
 
 Support
 =======

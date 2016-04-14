@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from celery import Task, states
+from celery.utils import uuid
 from celery.result import AsyncResult, EagerResult
 from inspect import getcallargs
 from .helpers import queue_once_key, get_redis, now_unix
@@ -79,6 +80,7 @@ class QueueOnce(Task):
 
         if not options.get('retries'):
             key = self.get_key(args, kwargs)
+            options.setdefault('task_id', uuid())
             try:
                 self.raise_or_lock(key, once_timeout, options)
             except self.AlreadyQueued as e:
@@ -123,7 +125,7 @@ class QueueOnce(Task):
 
         # By default, the tasks and redis key expire after 60 minutes.
         # (meaning it will not be executed and the lock will clear).
-        self.redis.setex(key, expires, now + expires)
+        self.redis.setex(key, expires, options['task_id'])
 
     def get_unlock_before_run(self):
         return self.once.get('unlock_before_run', False)

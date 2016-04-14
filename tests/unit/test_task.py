@@ -45,8 +45,8 @@ def test_get_key_bound_task():
 
 def test_raise_or_lock(redis):
     assert redis.get("test") is None
-    QueueOnce().raise_or_lock(key="test", expires=60)
-    assert redis.get("test") is not None
+    QueueOnce().raise_or_lock(key="test", expires=60, task_id=1)
+    assert redis.get("test") == b'1'
     assert redis.ttl("test") == 60
 
 
@@ -54,7 +54,7 @@ def test_raise_or_lock_locked(redis):
     # Set to expire in 30 seconds!
     redis.setex("test", 30, 1)
     with pytest.raises(AlreadyQueued) as e:
-        QueueOnce().raise_or_lock(key="test", expires=60)
+        QueueOnce().raise_or_lock(key="test", expires=60, task_id=2)
     assert e.value.countdown == 30
     assert e.value.message == "Expires in {} seconds".format(e.value.countdown)
     assert e.value.result.id == b'1'
@@ -62,8 +62,8 @@ def test_raise_or_lock_locked(redis):
 def test_raise_or_lock_locked_and_expired(redis):
     # Set to have expired 30 ago seconds!
     redis.setex("test", -30, 1)
-    QueueOnce().raise_or_lock(key="test", expires=60)
-    assert redis.get("test") is not None
+    QueueOnce().raise_or_lock(key="test", expires=60, task_id=2)
+    assert redis.get("test") == b'2'
     assert redis.ttl("test") == 60
 
 def test_clear_lock(redis):

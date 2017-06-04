@@ -162,10 +162,11 @@ This is set globally in Celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but
 
 ``unlock_before_run``
 ---------------------
-
 By default, the lock is removed after the task has executed (using celery's `after_return <https://celery.readthedocs.org/en/latest/reference/celery.app.task.html#celery.app.task.Task.after_return>`_). This behaviour can be changed setting the task's option ``unlock_before_run``. When set to ``True``, the lock will be removed just before executing the task.
 
-**Caveat**: any retry of the task won't re-enable the lock!
+**Caveats**:
+  * Any retry of the task won't re-enable the lock!
+  * This can only be set when defining the task, it cannot be passed dynamically to ``apply_async``
 
 .. code:: python
 

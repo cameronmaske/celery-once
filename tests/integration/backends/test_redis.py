@@ -76,7 +76,7 @@ def test_apply_async_queued(redis):
 def test_already_queued_graceful(redis):
     redis.set("qo_example_a-1", 10000000000)
     result = example.apply_async(args=(1, ), once={'graceful': True})
-    assert result is None
+    assert result.result is None
 
 
 @freeze_time("2012-01-14")  # Time since epoch = 1326499200

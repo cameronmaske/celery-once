@@ -12,7 +12,7 @@ Types of Contributions
 Report Bugs
 ~~~~~~~~~~~
 
-Report bugs at https://github.com/trackmaven/celery-once/issues.
+Report bugs at https://github.com/cameronmaske/celery-once/issues.
 
 If you are reporting a bug, please include:
 
@@ -62,8 +62,8 @@ development.
    virtualenvwrapper installed, this is how you set up your fork for
    local development::
 
-   $ mkvirtualenv celery-once 
-   $ cd celery-once/ $ pip install -e . 
+   $ mkvirtualenv celery-once
+   $ cd celery-once/ $ pip install -e .
    $ pip install -r requirements-dev.txt
 
 4. Create a branch for local development::
@@ -78,8 +78,8 @@ Now you can make your changes locally.
 
 6. Commit your changes and push your branch to GitHub::
 
-   $ git add . 
-   $ git commit -m “Your detailed description of your changes.” 
+   $ git add .
+   $ git commit -m “Your detailed description of your changes.”
    $ git push origin name-of-your-bugfix-or-feature
 
 7. Submit a pull request through the GitHub website.
@@ -93,8 +93,8 @@ Before you submit a pull request, check that it meets these guidelines:
    write the test and could use some guidance, mention that in the PR.
 2. If the pull request adds functionality, the README.md doc should be
    updated.
-3. The pull request should work for Python 2.7 and 3.3. Check
-   https://travis-ci.org/trackmaven/celery-once/pull\_requests and make
+3. The pull request should work for Python 2.7, 3.5 and 3.6. Check
+   https://travis-ci.org/cameronmaske/celery-once/pull\_requests and make
    sure that the tests pass for all supported Python versions.
 
 Tips

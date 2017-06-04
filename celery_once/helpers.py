@@ -59,7 +59,7 @@ def queue_once_key(name, kwargs, restrict_to=None):
     Turns a list the name of the task, the kwargs and allowed keys
     into a redis key.
     """
-    keys = ['qo', name]
+    keys = ['qo', force_string(name)]
     # Restrict to only the keys allowed in keys.
     if restrict_to is not None:
         restrict_kwargs = {key: kwargs[key] for key in restrict_to}

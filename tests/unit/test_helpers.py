@@ -83,6 +83,17 @@ def test_queue_once_key_kwargs_restrict_keys():
     assert key == "qo_example_pk-10"
 
 
+@pytest.mark.skipif(six.PY3, reason='requires python 2')
+def test_queue_once_key_unicode_py2():
+    key = queue_once_key(u"éxample", {'a': u'é', u'b': 'é'})
+    assert key == "qo_\xc3\xa9xample_a-\xc3\xa9_b-\xc3\xa9"
+
+
+@pytest.mark.skipif(six.PY2, reason='requires python 3')
+def test_queue_once_key_unicode_py3():
+    key = queue_once_key(u"éxample", {'a': u'é', u'b': 'é'})
+    assert key == "qo_éxample_a-é_b-é"
+
 class TestBackend(object):
     def __init__(self, settings):
         self.settings = settings

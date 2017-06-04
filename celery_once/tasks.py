@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 
 """Definition of the QueueOnce task and AlreadyQueued exception."""
 
+=======
+from celery import Task, states
+from celery.result import EagerResult
+>>>>>>> master
 from inspect import getcallargs
 
 from celery import Task, states
@@ -18,7 +23,8 @@ class AlreadyQueued(Exception):
 class QueueOnce(Task):
     abstract = True
     once = {
-        'graceful': False
+        'graceful': False,
+        'unlock_before_run': False
     }
 
     """
@@ -56,6 +62,18 @@ class QueueOnce(Task):
     @property
     def default_timeout(self):
         return self.once_config['settings'].get('timeout', 60 * 60)
+
+    def get_unlock_before_run(self):
+        return self.once.get('unlock_before_run', False)
+
+    def __call__(self, *args, **kwargs):
+        # Only clear the lock before the task's execution if the
+        # "unlock_before_run" option is True
+        if self.get_unlock_before_run():
+            key = self.get_key(args, kwargs)
+            self.clear_lock(key)
+
+        return super(QueueOnce, self).__call__(*args, **kwargs)
 
     def apply_async(self, args=None, kwargs=None, **options):
         """
@@ -107,10 +125,36 @@ class QueueOnce(Task):
         key = queue_once_key(self.name, call_args, restrict_to)
         return key
 
+    def raise_or_lock(self, key, expires):
+        """
+        Checks if the task is locked and raises an exception, else locks
+        the task.
+        """
+        now = now_unix()
+        # Check if the tasks is already queued if key is in redis.
+        result = self.redis.get(key)
+        if result:
+            # Work out how many seconds remaining till the task expires.
+            remaining = int(result) - now
+            if remaining > 0:
+                raise self.AlreadyQueued(remaining)
+
+        # By default, the tasks and redis key expire after 60 minutes.
+        # (meaning it will not be executed and the lock will clear).
+        self.redis.setex(key, expires, now + expires)
+
+    def clear_lock(self, key):
+        self.redis.delete(key)
+
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
         After a task has run (both succesfully or with a failure) clear the
-        lock.
+        lock if "unlock_before_run" is False.
         """
         key = self.get_key(args, kwargs)
         self.once_backend.clear_lock(key)
+        # Only clear the lock after the task's execution if the
+        # "unlock_before_run" option is False
+        if not self.get_unlock_before_run():
+            key = self.get_key(args, kwargs)
+            self.clear_lock(key)

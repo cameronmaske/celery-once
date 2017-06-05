@@ -177,21 +177,25 @@ By default, the lock is removed after the task has executed (using celery's `aft
 
 
 
+
 Backends
 ========
 
 Redis Backend
 -------------
 
-Requires...
+
+Requires:
+
 * `Redis <http://redis.io/>`_ is used as a distributed locking mechanism.
 
-Configuration...
-* ``backend`` - `celery_once.backends.Redis`
-* ``settings``
-  * ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
-  * ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
-should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
+Configuration:
+
+-  ``backend`` - ``celery_once.backends.Redis``
+-  ``settings``
+   - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
+   - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
+
 
 Example:
 
@@ -209,8 +213,9 @@ Example:
 Custom Backend
 --------------
 
-If you want to implement a custom locking backend, see [BACKEND_GUIDE.rst](BACKEND_GUIDE.rst).
+If you want to implement a custom locking backend, see `BACKEND\_GUIDE.rst`_.
 
+.. _BACKEND\_GUIDE.rst: BACKEND_GUIDE.rst
 
 Support
 =======

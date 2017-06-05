@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from celery_once.helpers import queue_once_key, kwargs_to_list, force_string
+from celery_once.helpers import (
+    queue_once_key, kwargs_to_list, force_string, import_backend)
 
 import pytest
 import six
@@ -92,3 +93,16 @@ def test_queue_once_key_unicode_py2():
 def test_queue_once_key_unicode_py3():
     key = queue_once_key(u"éxample", {'a': u'é', u'b': 'é'})
     assert key == "qo_éxample_a-é_b-é"
+
+class TestBackend(object):
+    def __init__(self, settings):
+        self.settings = settings
+
+
+def test_import_backend():
+    config = {
+        'backend': "tests.backends.TestBackend",
+        'settings': 1
+    }
+    backend = import_backend(config)
+    assert backend.settings == 1

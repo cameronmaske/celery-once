@@ -1,30 +1,23 @@
 # -*- coding: utf-8 -*-
-from time import time
-from redis import StrictRedis
-try:
-    from urlparse import urlparse
-except:
-    # Python 3!
-    from urllib.parse import urlparse
+
+"""Definition of helper functions."""
+
 import six
+import importlib
+
+from time import time
 
 
-def parse_redis_details(url):
-    parsed = urlparse(url)
-    details = {
-        'host': parsed.hostname,
-        'password': parsed.password,
-        'port': parsed.port
-    }
-    try:
-        details['db'] = int(parsed.path.lstrip('/'))
-    except:
-        pass
-    return details
-
-
-def get_redis(url):
-    return StrictRedis(**(parse_redis_details(url)))
+def import_backend(config):
+    """
+    Imports and initializes the Backend class.
+    """
+    backend_name = config['backend']
+    path = backend_name.split('.')
+    backend_mod_name, backend_class_name = '.'.join(path[:-1]), path[-1]
+    backend_mod = importlib.import_module(backend_mod_name)
+    backend_class = getattr(backend_mod, backend_class_name)
+    return backend_class(config['settings'])
 
 
 def now_unix():

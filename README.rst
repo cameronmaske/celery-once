@@ -18,19 +18,14 @@ Installing ``celery_once`` is simple with pip, just run:
 Requirements
 ============
 
-* `Celery <http://www.celeryproject.org/>`_. Built to run with Celery 3.1. Older versions may work, but are not officially supported.
-* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism.
+* `Celery <http://www.celeryproject.org/>`_. Built to run with Celery 4.0. Older versions may work, but are not officially supported.
 
 Usage
 =====
 
 To use ``celery_once``, your tasks need to inherit from an `abstract <http://celery.readthedocs.org/en/latest/userguide/tasks.html#abstract-classes>`_ base task called ``QueueOnce``.
 
-You may need to tune the following Celery configuration options...
-
-    * ``ONCE_REDIS_URL`` should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
-    * ``ONCE_DEFAULT_TIMEOUT`` how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
-
+Once installed, you'll need to configure a few options a ``ONCE`` key in celery's conf.
 
 .. code:: python
 
@@ -39,13 +34,21 @@ You may need to tune the following Celery configuration options...
     from time import sleep
 
     celery = Celery('tasks', broker='amqp://guest@localhost//')
-    celery.conf.ONCE_REDIS_URL = 'redis://localhost:6379/0'
-    celery.conf.ONCE_DEFAULT_TIMEOUT = 60 * 60
+    celery.conf.ONCE = {
+      'backend': 'celery_once.backends.Redis',
+      'settings': {
+        'url': 'redis://localhost:6379/0',
+        'default_timeout': 60 * 60
+      }
+    }
 
     @celery.task(base=QueueOnce)
     def slow_task():
         sleep(30)
         return "Done!"
+
+
+The exact configuration, depends on which locking backend you want to use. See [Backends](#Backends).
 
 
 Behind the scenes, this overrides ``apply_async`` and ``delay``. It does not affect calling the tasks directly.
@@ -159,10 +162,11 @@ This is set globally in Celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but
 
 ``unlock_before_run``
 ---------------------
-
 By default, the lock is removed after the task has executed (using celery's `after_return <https://celery.readthedocs.org/en/latest/reference/celery.app.task.html#celery.app.task.Task.after_return>`_). This behaviour can be changed setting the task's option ``unlock_before_run``. When set to ``True``, the lock will be removed just before executing the task.
 
-**Caveat**: any retry of the task won't re-enable the lock!
+**Caveats**:
+  * Any retry of the task won't re-enable the lock!
+  * This can only be set when defining the task, it cannot be passed dynamically to ``apply_async``
 
 .. code:: python
 
@@ -172,10 +176,46 @@ By default, the lock is removed after the task has executed (using celery's `aft
         return "Done!"
 
 
+
+Backends
+========
+
+Redis Backend
+-------------
+
+Requires...
+* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism.
+
+Configuration...
+* ``backend`` - `celery_once.backends.Redis`
+* ``settings``
+  * ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
+  * ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
+should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
+
+Example:
+
+.. code:: python
+
+    celery.conf.ONCE = {
+      'backend': 'celery_once.backends.Redis',
+      'settings': {
+        'url': 'redis://localhost:6379/0',
+        'default_timeout': 60 * 60
+      }
+    }
+
+
+Custom Backend
+--------------
+
+If you want to implement a custom locking backend, see [BACKEND_GUIDE.rst](BACKEND_GUIDE.rst).
+
+
 Support
 =======
 
-* Tests are run against Python 2.7 and 3.3. Other versions may work, but are not officially supported.
+* Tests are run against Python 2.7, 3.4 and 3.5. Other versions may work, but are not officially supported.
 
 Contributing
 ============

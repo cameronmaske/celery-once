@@ -193,8 +193,8 @@ Configuration:
 
 -  ``backend`` - ``celery_once.backends.Redis``
 -  ``settings``
-   - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
-   - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
+  - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
+  - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
 
 
 Example:

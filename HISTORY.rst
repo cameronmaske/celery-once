@@ -1,6 +1,19 @@
 History
 =======
 
+1.0.0
+-----
+
+2017-06-05
+
+Major release:
+
+This release contains breaking changes. Please revisit the README for the latest setup instructions.
+
+- Refactored code to allow for custom backends.
+- Bumped offical support to celery >= 4.
+- Bumped offical support to Python 2.7, 3.5 and 3.6.
+
 0.1.4
 -----
 

@@ -1,4 +1,4 @@
-pytest==2.7
+pytest==2.9.2
 pytest-cov==1.8.1
 pytest-mock==1.6.0
 python-coveralls==2.4.3

@@ -1,5 +1,4 @@
 import pytest
-import mock
 
 from celery import Celery
 from celery_once import QueueOnce, AlreadyQueued
@@ -25,9 +24,17 @@ def mock_backend(mocker):
 def example():
     return
 
+
 @app.task(name="example_unlock_before_run", base=QueueOnce, once={'unlock_before_run': True})
 def example_unlock_before_run():
     return
+
+
+@app.task(name="example_retry", base=QueueOnce, once={'keys': []}, bind=True)
+def example_retry(self, a=0):
+    if a != 1:
+        self.request.called_directly = False
+        self.retry(kwargs={'a': 1})
 
 
 def test_config():
@@ -70,6 +77,13 @@ def test_raise_already_queued_graceful():
     example.once_backend.raise_or_lock.side_effect = AlreadyQueued(60)
     result = example.apply_async(once={'graceful': True})
     assert result.result is None
+
+
+def test_retry():
+    example_retry.apply_async()
+    example.once_backend.raise_or_lock.assert_called_with(
+        "qo_example_retry", timeout=60)
+    example.once_backend.clear_lock.assert_called_with("qo_example_retry")
 
 
 def test_delay_unlock_before_run(mocker):

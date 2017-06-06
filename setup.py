@@ -33,7 +33,7 @@ setup(
     author='Cameron Maske',
     author_email='cam@trackmaven.com',
     url='https://github.com/trackmaven/celery-once',
-    packages=find_packages(),
+    packages=find_packages("celery_once", exclude=["tests"]),
     install_requires=requirements,
     license="BSD",
     keywords='celery, mutex, once, lock, redis',

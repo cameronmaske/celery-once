@@ -34,7 +34,6 @@ setup(
     author_email='cam@trackmaven.com',
     url='https://github.com/trackmaven/celery-once',
     packages=find_packages(),
-    include_package_data=True,
     install_requires=requirements,
     license="BSD",
     keywords='celery, mutex, once, lock, redis',

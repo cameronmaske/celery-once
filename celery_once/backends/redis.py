@@ -29,17 +29,27 @@ def parse_url(url):
     return details
 
 
-class Redis(object):
-    """Redis backend."""
+redis = None
 
-    def __init__(self, settings):
+
+def get_redis(settings):
+    global redis
+    if not redis:
         try:
             from redis import StrictRedis
         except ImportError:
             raise ImportError(
                 "You need to install the redis library in order to use Redis"
                 " backend (pip install redis)")
-        self._redis = StrictRedis(**parse_url(settings['url']))
+        redis = StrictRedis(**parse_url(settings['url']))
+    return redis
+
+
+class Redis(object):
+    """Redis backend."""
+
+    def __init__(self, settings):
+        self._redis = get_redis(settings)
 
     @property
     def redis(self):

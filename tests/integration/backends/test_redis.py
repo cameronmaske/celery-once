@@ -84,3 +84,19 @@ def test_apply_async_expired(redis):
     # Fallback, key should of been timed out.
     redis.set("qo_example_a-1", 1326499200 - 60 * 60)
     example.apply_async(args=(1, ))
+
+
+@mock.patch('celery_once.tasks.get_redis')
+def test_redis_cached_property(get_redis_mock):
+    # Remove any side effect previous tests could have had
+    del simple_example.app._cached_redis
+
+    assert get_redis_mock.call_count == 0
+    assert not hasattr(simple_example.app, '_cached_redis')
+    simple_example.redis
+    assert get_redis_mock.call_count == 1
+    assert hasattr(simple_example.app, '_cached_redis')
+    simple_example.redis
+    assert hasattr(simple_example.app, '_cached_redis')
+    # as simple_example.redis is a cached_property, get_redis has not been called again
+    assert get_redis_mock.call_count == 1

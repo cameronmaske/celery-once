@@ -1,6 +1,13 @@
 History
 =======
 
+X.X.X
+-----
+
+20XX-XX-XX
+
+- Exlude test files from package.
+
 1.0.2
 -----
 

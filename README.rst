@@ -193,11 +193,24 @@ Configuration:
 
 -  ``backend`` - ``celery_once.backends.Redis``
 -  ``settings``
-  - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``)
   - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
+  - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``). See below for the format options supported
 
 
-Example:
+The URL parser supports two patterns of urls:
+
+* ``redis://host:port[/db][?options]``: redis over TCP
+
+* ``redis+socket:///path/to/redis.sock[?options]``: redis over a UNIX socket
+
+  The ``options`` query args are mapped to the `StrictRedis <https://redis-py.readthedocs.org/en/latest/index.html#redis.StrictRedis>`_ keyword args.
+  Examples:
+  * ``redis://localhost:6379/1``
+
+  * ``redis+socket:///var/run/redis/redis.sock?db=1``
+
+
+Example Configuration:
 
 .. code:: python
 

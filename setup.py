@@ -6,7 +6,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 requirements = [
-    "celery>=4.0",
+    "celery",
     "redis"
 ]
 

@@ -1,6 +1,13 @@
 History
 =======
 
+1.0.1
+-----
+
+2017-06-06
+
+- Added support to connect to Redis over sockets. Thanks @brouberol (#33, #49)
+
 1.0.0
 -----
 

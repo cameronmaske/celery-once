@@ -1,6 +1,28 @@
 History
 =======
 
+X.X.X
+-----
+
+20XX-XX-XX
+
+- Exlude test files from package.
+
+1.0.2
+-----
+
+2017-06-06
+
+- Fixed an issue where retrying tasks would check for the lock on re-run (and error out). Thanks @lackita for the fix (#37, #48).
+
+
+1.0.1
+-----
+
+2017-06-06
+
+- Added support to connect to Redis over sockets. Thanks @brouberol (#33, #49)
+
 1.0.0
 -----
 

@@ -89,7 +89,6 @@ class QueueOnce(Task):
         once_timeout = once_options.get(
             'timeout', self.once.get('timeout', self.default_timeout))
 
-        print(options.get('retries'))
         if not options.get('retries'):
             key = self.get_key(args, kwargs)
             try:

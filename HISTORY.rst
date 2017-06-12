@@ -1,6 +1,13 @@
 History
 =======
 
+1.2.0
+-----
+
+2017-06-12
+
+- Cache the redis connection, instead of reinstantaiting one after each task execution (#34, #47). Thanks @brouberol.
+
 1.1.0
 -----
 

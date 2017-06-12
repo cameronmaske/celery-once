@@ -88,3 +88,18 @@ def test_redis_clear_lock(redis, backend):
     redis.set("test", 1326499200 + 30)
     backend.clear_lock("test")
     assert redis.get("test") is None
+
+
+def test_redis_cached_property(mocker, monkeypatch):
+    # Remove any side effect previous tests could have had
+    monkeypatch.setattr('celery_once.backends.redis.redis', None)
+    mock_parse = mocker.patch('celery_once.backends.redis.parse_url')
+    mock_parse.return_value = {
+        'host': "localhost"
+    }
+    # Despite the class being inited twice, should only setup once.
+    Redis({
+        'url': "redis://localhost:1337"
+    })
+    Redis({})
+    assert mock_parse.call_count == 1

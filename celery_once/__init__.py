@@ -2,7 +2,7 @@
 
 __author__ = 'Cameron Maske'
 __email__ = 'cameronmaske@gmail.com'
-__version__ = '1.0.2'
+__version__ = '1.1.0'
 
 
 from .tasks import QueueOnce, AlreadyQueued

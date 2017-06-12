@@ -8,7 +8,7 @@ app = Celery()
 app.conf.ONCE = {
     'backend': 'tests.backends.TestBackend',
     'settings': {
-        'timeout': 60
+        'default_timeout': 60
     }
 }
 app.conf.CELERY_ALWAYS_EAGER = True
@@ -45,7 +45,7 @@ def test_once_config():
     assert example.once_config == {
         'backend': 'tests.backends.TestBackend',
         'settings': {
-            'timeout': 60
+            'default_timeout': 60
         }
     }
 

@@ -1,12 +1,14 @@
 History
 =======
 
-X.X.X
+1.1.0
 -----
 
-20XX-XX-XX
+2017-06-12
 
-- Exlude test files from package.
+- Exclude test files from package.
+- Use relative import to import Redis backend. #52
+- Correctly set `default_timeout` from settings. #53 #54 (Thanks @Snake575)
 
 1.0.2
 -----

@@ -53,7 +53,7 @@ class QueueOnce(Task):
 
     @property
     def default_timeout(self):
-        return self.once_config['settings'].get('timeout', 60 * 60)
+        return self.once_config['settings'].get('default_timeout', 60 * 60)
 
     def unlock_before_run(self):
         return self.once.get('unlock_before_run', False)

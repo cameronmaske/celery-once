@@ -53,7 +53,7 @@ def test_kwargs_to_list_5():
     keys = kwargs_to_list(
         {'a': {u'é': 'c'}, 'b': [u'a', 'é'], u'c': 1, 'd': 'é', 'e': u'é'})
     assert keys == [
-        "a-{'\\xc3\\xa9': 'c'}",
+        "a-[('\\xc3\\xa9', 'c')]",
         "b-['a', '\\xc3\\xa9']",
         "c-1",
         "d-\xc3\xa9",
@@ -65,7 +65,12 @@ def test_kwargs_to_list_5():
 def test_kwargs_to_list_6():
     keys = kwargs_to_list(
         {'a': {u'é': 'c'}, 'b': [u'a', 'é'], u'c': 1, 'd': 'é', 'e': u'é'})
-    assert keys == ["a-{'é': 'c'}", "b-['a', 'é']", "c-1", "d-é", 'e-é']
+    assert keys == ["a-[('é', 'c')]", "b-['a', 'é']", "c-1", "d-é", 'e-é']
+
+
+def test_kwargs_to_list_nested_dict_is_sorted():
+    keys = kwargs_to_list({'nested': {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}})
+    assert keys == ["nested-[('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5)]"]
 
 
 def test_queue_once_key():

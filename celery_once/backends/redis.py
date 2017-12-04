@@ -11,7 +11,6 @@ except:
     # Python 3!
     from urllib.parse import urlparse, parse_qsl
 
-from celery_once.helpers import now_unix
 from celery_once.tasks import AlreadyQueued
 
 
@@ -55,6 +54,11 @@ def parse_url(url):
 
 redis = None
 
+try:
+    from redis.lock import Lock as RedisLock
+except ImportError:
+    pass
+
 
 def get_redis(settings):
     global redis
@@ -83,20 +87,13 @@ class Redis(object):
     def raise_or_lock(self, key, timeout):
         """
         Checks if the task is locked and raises an exception, else locks
-        the task.
+        the task. By default, the tasks and the key expire after 60 minutes.
+        (meaning it will not be executed and the lock will clear).
         """
-        now = now_unix()
-        # Check if the tasks is already queued if key is in cache.
-        result = self.redis.get(key)
-        if result:
-            # Work out how many seconds remaining till the task timeout.
-            remaining = int(result) - now
-            if remaining > 0:
-                raise AlreadyQueued(remaining)
+        acquired = RedisLock(self.redis, key, timeout=timeout, blocking_timeout=1).acquire()
 
-        # By default, the tasks and the key expire after 60 minutes.
-        # (meaning it will not be executed and the lock will clear).
-        self.redis.setex(key, timeout, now + timeout)
+        if not acquired:
+            raise AlreadyQueued()
 
     def clear_lock(self, key):
         """Remove the lock from redis."""

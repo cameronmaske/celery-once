@@ -8,9 +8,7 @@ from .helpers import queue_once_key, import_backend
 
 
 class AlreadyQueued(Exception):
-    def __init__(self, countdown):
-        self.message = "Expires in {} seconds".format(countdown)
-        self.countdown = countdown
+    pass
 
 
 class QueueOnce(Task):

@@ -1,9 +1,10 @@
 import pytest
-from freezegun import freeze_time
+import time
 from fakeredis import FakeStrictRedis
 
 from celery import Celery
 from celery_once import QueueOnce, AlreadyQueued
+from redis.lock import Lock as RedisLock
 
 
 @pytest.fixture()
@@ -51,11 +52,15 @@ def test_delay_already_queued(redis):
         pass
 
 
-@freeze_time("2012-01-14")  # Time since epoch = 1326499200
 def test_delay_expired(redis):
-    # Fallback, key should of been timed out.
-    redis.set("qo_example_a-1", 1326499200 - 60 * 60)
+    lock = RedisLock(redis, "qo_example_a-1", timeout=1)
+    lock.acquire()
+
+    assert redis.get("qo_example_a-1") is not None
+
+    time.sleep(1)
     example.delay(1)
+
     assert redis.get("qo_example_a-1") is None
 
 
@@ -79,8 +84,13 @@ def test_already_queued_graceful(redis):
     assert result.result is None
 
 
-@freeze_time("2012-01-14")  # Time since epoch = 1326499200
 def test_apply_async_expired(redis):
-    # Fallback, key should of been timed out.
-    redis.set("qo_example_a-1", 1326499200 - 60 * 60)
+    lock = RedisLock(redis, "qo_example_a-1", timeout=1)
+    lock.acquire()
+
+    assert redis.get("qo_example_a-1") is not None
+
+    time.sleep(1)
     example.apply_async(args=(1, ))
+
+    assert redis.get("qo_example_a-1") is None

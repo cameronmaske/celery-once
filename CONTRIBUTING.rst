@@ -38,7 +38,7 @@ Submit Feedback
 ~~~~~~~~~~~~~~~
 
 The best way to send feedback is to file an issue at
-https://github.com/trackmaven/celery-once/issues.
+https://github.com/cameronmaske/celery-once/issues.
 
 If you are proposing a feature:
 

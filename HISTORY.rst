@@ -1,6 +1,14 @@
 History
 =======
 
+1.3.0
+-----
+
+2018-04-25
+
+- Fixed an issue where tasks with autoretry_for got into a locked state (#58). Thanks @andbortnik.
+
+
 1.2.0
 -----
 

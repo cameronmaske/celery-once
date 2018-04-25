@@ -48,7 +48,7 @@ Once installed, you'll need to configure a few options a ``ONCE`` key in celery'
         return "Done!"
 
 
-The exact configuration, depends on which locking backend you want to use. See [Backends](#Backends).
+The exact configuration, depends on which locking backend you want to use. See `Backends`_.
 
 
 Behind the scenes, this overrides ``apply_async`` and ``delay``. It does not affect calling the tasks directly.

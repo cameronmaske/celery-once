@@ -186,7 +186,7 @@ Redis Backend
 
 Requires:
 
-* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism. Behind the scenes, it use Redlock. This `page <https://redis.io/topics/distlock>` has more infomation about the locking guarantees.
+* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism. Behind the scenes, it use Redlock. This `page <https://redis.io/topics/distlock>`_ has more infomation about the locking guarantees.
 
 Configuration:
 

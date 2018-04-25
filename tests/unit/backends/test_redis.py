@@ -74,6 +74,9 @@ def test_redis_raise_or_lock_locked(redis, backend):
     with pytest.raises(AlreadyQueued) as e:
         backend.raise_or_lock(key="test", timeout=60)
 
+    assert e.value.countdown == 30.0
+    assert e.value.message == "Expires in 30.0 seconds"
+
 
 def test_redis_raise_or_lock_locked_and_expired(redis, backend):
     lock = RedisLock(redis, "test", timeout=1)

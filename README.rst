@@ -184,10 +184,9 @@ Backends
 Redis Backend
 -------------
 
-
 Requires:
 
-* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism.
+* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism. Behind the scenes, it use Redlock. If you'd like to learn more the locking guarantees, `this page <https://redis.io/topics/distlock>` covers most of the details.
 
 Configuration:
 
@@ -195,6 +194,8 @@ Configuration:
 -  ``settings``
   - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
   - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``). See below for the format options supported
+  - ``blocking`` - (boolean value: default `False`)
+  - ``blocking_timeout`` - (int value: default `1`)
 
 
 The URL parser supports two patterns of urls:

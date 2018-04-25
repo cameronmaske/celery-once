@@ -1,6 +1,11 @@
-*.DS_Store
+# Byte-compiled / optimized / DLL files
+__pycache__/
 *.py[cod]
+*$py.class
+*.DS_Store
 .cache
+Pipfile
+example/
 
 # C extensions
 *.so

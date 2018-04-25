@@ -55,9 +55,11 @@ def parse_url(url):
 redis = None
 
 try:
-    from redis.lock import Lock as RedisLock
+    from redis.lock import Lock
 except ImportError:
-    pass
+    raise ImportError(
+        "You need to install the redis library in order to use Redis"
+        " backend (pip install redis)")
 
 
 def get_redis(settings):
@@ -74,10 +76,12 @@ def get_redis(settings):
 
 
 class Redis(object):
-    """Redis backend."""
+    """Redis locking backend."""
 
     def __init__(self, settings):
         self._redis = get_redis(settings)
+        self.blocking_timeout = settings.get("blocking_timeout", 1)
+        self.blocking = settings.get("blocking", False)
 
     @property
     def redis(self):
@@ -90,10 +94,19 @@ class Redis(object):
         the task. By default, the tasks and the key expire after 60 minutes.
         (meaning it will not be executed and the lock will clear).
         """
-        acquired = RedisLock(self.redis, key, timeout=timeout, blocking_timeout=1).acquire()
+        acquired = Lock(
+            self.redis,
+            key,
+            timeout=timeout,
+            blocking=self.blocking,
+            blocking_timeout=self.blocking_timeout
+        ).acquire()
 
         if not acquired:
-            raise AlreadyQueued()
+            # Time remaining in milliseconds
+            # https://redis.io/commands/pttl
+            ttl = self.redis.pttl(key)
+            raise AlreadyQueued(ttl / 1000.)
 
     def clear_lock(self, key):
         """Remove the lock from redis."""

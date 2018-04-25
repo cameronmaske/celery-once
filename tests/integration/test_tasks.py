@@ -68,13 +68,13 @@ def test_apply_async_timeout(mocker):
 
 
 def test_raise_already_queued():
-    example.once_backend.raise_or_lock.side_effect = AlreadyQueued()
+    example.once_backend.raise_or_lock.side_effect = AlreadyQueued(60)
     with pytest.raises(AlreadyQueued):
         example.apply_async()
 
 
 def test_raise_already_queued_graceful():
-    example.once_backend.raise_or_lock.side_effect = AlreadyQueued()
+    example.once_backend.raise_or_lock.side_effect = AlreadyQueued(60)
     result = example.apply_async(once={'graceful': True})
     assert result.result is None
 

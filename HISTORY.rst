@@ -1,6 +1,26 @@
 History
 =======
 
+2.0.0
+-----
+
+2018-04-25
+
+Major Release:
+
+This changes the `Redis` backend to use a SETNX-based lock (RedLock). This should address race conditions that the previous approach had (See: #7, #60).
+
+*This may not be backwards compatible with existing keys stored in redis.*
+If you are upgrading from `1.0.0`, you are advised to remove any previous lock keys (See https://github.com/cameronmaske/celery-once/pull/67#issuecomment-384281438 for instructions).
+
+Other changes include:
+
+    - Able to run on blocking mode when scheduling tasks with Redis backend. See the README for more details.
+    - AlreadyQueued exception return's countdown seconds as `float` instead of `int`.
+
+Big thanks to @grjones for his contributions for this patch.
+
+
 1.3.0
 -----
 

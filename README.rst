@@ -242,7 +242,7 @@ Contributions are welcome, and they are greatly appreciated! See `contributing
 guide <CONTRIBUTING.rst>`_ for more details.
 
 
-.. |Build Status| image:: https://travis-ci.org/TrackMaven/celery-once.svg
-   :target: https://travis-ci.org/TrackMaven/celery-once
-.. |Coverage Status| image:: https://coveralls.io/repos/TrackMaven/celery-once/badge.svg
-   :target: https://coveralls.io/r/TrackMaven/celery-once
+.. |Build Status| image:: https://travis-ci.org/cameronmaske/celery-once.svg
+   :target: https://travis-ci.org/cameronmaske/celery-once
+.. |Coverage Status| image:: https://coveralls.io/repos/cameronmaske/celery-once/badge.svg
+   :target: https://coveralls.io/r/cameronmaske/celery-once

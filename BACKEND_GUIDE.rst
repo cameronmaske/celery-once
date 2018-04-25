@@ -50,4 +50,4 @@ The `redis backend`_ is a good example of all of this in practice. If
 you’d like to contribute a new backend and still feel unsure how to do
 so, feel free to open an issue with any questions.
 
-.. _redis backend: https://github.com/TrackMaven/celery-once/blob/dc1d679b6b12e2a26fafa6783bed0e54108336ce/celery_once/backends/redis.py#L32
+.. _redis backend: https://github.com/cameronmaske/celery-once/blob/dc1d679b6b12e2a26fafa6783bed0e54108336ce/celery_once/backends/redis.py#L32

@@ -197,8 +197,10 @@ Configuration:
   - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
 
   - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``). See below for the format options supported
-  - ``blocking`` (boolean value: default `False`) - If set to `True`, scheduling a task (by `.delay/.apply_async`) will try for X seconds (see: `blocking_timeout` below) to acquire the lock. If no lock could be acquired after X seconds, will raise an `AlreadyQueued` exception. This is an advanced use case scenario and by default this is not enabled.
-  - ``blocking_timeout`` (int or float value: default `1`) - How many seconds the task will block trying to aquire the lock, if `blocking` is set to `True`. Setting this to `None` indicates continue trying forever (equivalent to infinite).
+
+  - ``blocking`` (boolean value: default ``False``) - If set to ``True``, scheduling a task (by ``.delay/.apply_async``) will block for X seconds to acquire the lock (see: ``blocking_timeout`` below). If no lock could be acquired after X seconds, will raise an ``AlreadyQueued`` exception. This is a very specific use-case scenario and by default is disabled.
+
+  - ``blocking_timeout`` (int or float value: default ``1``) - How many seconds the task will block trying to aquire the lock, if ``blocking`` is set to ``True``. Setting this to ``None`` set's no timeout (equivalent to infinite seconds).
 
 
 

@@ -68,6 +68,16 @@ def test_kwargs_to_list_6():
     assert keys == ["a-{'é': 'c'}", "b-['a', 'é']", "c-1", "d-é", 'e-é']
 
 
+def test_kwargs_to_list_nested_dict_is_sorted_1():
+    keys = kwargs_to_list({'nested': {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}})
+    assert keys == ["nested-{'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}"]
+
+
+def test_kwargs_to_list_nested_dict_is_sorted_2():
+    keys = kwargs_to_list({'nested': {'a': {'a': 1, 'b': 2}, 'c': 2, 'b': 3, 'd': 4, 'e': 5}})
+    assert keys == ["nested-{'a': \"{'a': 1, 'b': 2}\", 'b': 3, 'c': 2, 'd': 4, 'e': 5}"]
+
+
 def test_queue_once_key():
     key = queue_once_key("example", {})
     assert key == "qo_example"
@@ -93,6 +103,7 @@ def test_queue_once_key_unicode_py2():
 def test_queue_once_key_unicode_py3():
     key = queue_once_key(u"éxample", {'a': u'é', u'b': 'é'})
     assert key == "qo_éxample_a-é_b-é"
+
 
 class TestBackend(object):
     def __init__(self, settings):

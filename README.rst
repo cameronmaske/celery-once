@@ -18,7 +18,7 @@ Installing ``celery_once`` is simple with pip, just run:
 Requirements
 ============
 
-* `Celery <http://www.celeryproject.org/>`_. Built to run with Celery 4.0. Older versions may work, but are not officially supported.
+* `Celery <http://www.celeryproject.org/>`__. Built to run with Celery 4.0. Older versions may work, but are not officially supported.
 
 Usage
 =====
@@ -57,7 +57,7 @@ When running the task, ``celery_once`` checks that no lock is in place (against 
 If it isn't, the task will run as normal. Once the task completes (or ends due to an exception) the lock will clear.
 If an attempt is made to run the task again before it completes an ``AlreadyQueued`` exception will be raised.
 
-.. code:: python
+.. code-block:: pycon
 
     example.delay(10)
     example.delay(10)
@@ -65,7 +65,7 @@ If an attempt is made to run the task again before it completes an ``AlreadyQueu
         ..
     AlreadyQueued()
 
-.. code:: python
+.. code-block:: pycon
 
     result = example.apply_async(args=(10))
     result = example.apply_async(args=(10))
@@ -77,7 +77,7 @@ If an attempt is made to run the task again before it completes an ``AlreadyQueu
 ``graceful``
 ------------
 
-Optionally, instead of raising an ``AlreadyQueued`` exception, the task can return ``None`` if ``once={'graceful': True}`` is set in the task's `options <http://celery.readthedocs.org/en/latest/userguide/tasks.html#list-of-options>`_ or when run through ``apply_async``.
+Optionally, instead of raising an ``AlreadyQueued`` exception, the task can return ``None`` if ``once={'graceful': True}`` is set in the task's `options <http://celery.readthedocs.org/en/latest/userguide/tasks.html#list-of-options>`__ or when run through ``apply_async``.
 
 .. code:: python
 
@@ -118,7 +118,7 @@ Running the task with different arguments will default to checking against diffe
 
 If you want to specify locking based on a subset, or no arguments you can adjust the keys ``celery_once`` looks at in the task's `options <http://celery.readthedocs.org/en/latest/userguide/tasks.html#list-of-options>`_ with ``once={'keys': [..]}``
 
-.. code:: python
+.. code:: pycon
 
     @celery.task(base=QueueOnce, once={'keys': ['a']})
     def slow_add(a, b):
@@ -133,7 +133,7 @@ If you want to specify locking based on a subset, or no arguments you can adjust
     AlreadyQueued()
     example.delay(2, 2)
 
-.. code:: python
+.. code:: pycon
 
     @celery.task(base=QueueOnce, once={'keys': []})
     def slow_add(a, b):
@@ -192,9 +192,13 @@ Requires:
 Configuration:
 
 -  ``backend`` - ``celery_once.backends.Redis``
+
 -  ``settings``
+
   - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
+
   - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``). See below for the format options supported
+
 
 
 The URL parser supports two patterns of urls:

@@ -5,6 +5,7 @@
 import operator
 import six
 import importlib
+from collections import OrderedDict
 
 from time import time
 
@@ -32,16 +33,22 @@ def items_sorted_by_key(kwargs):
     return sorted(six.iteritems(kwargs), key=operator.itemgetter(0))
 
 
+def order_dict_to_string(d):
+    return '{' + ', '.join(str(dict({x: y})).strip('{}') for x, y in d.items()) + '}'
+
+
 def force_string(kwargs):
     """
     Force key in dict or list to a string.
-    Fixes: https://github.com/TrackMaven/celery-once/issues/11
+    Fixes: https://github.com/cameronmaske/celery-once/issues/11
     """
     if isinstance(kwargs, dict):
-        return [
+        # Context: https://github.com/cameronmaske/celery-once/issues/58
+        # Keep equivalent to string of dict for backwards compatibility.
+        return order_dict_to_string(OrderedDict(
             (force_string(key), force_string(value))
             for key, value in items_sorted_by_key(kwargs)
-        ]
+        ))
     elif isinstance(kwargs, list):
         return [force_string(element) for element in kwargs]
     elif six.PY2 and isinstance(kwargs, unicode):

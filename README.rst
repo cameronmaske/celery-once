@@ -184,10 +184,9 @@ Backends
 Redis Backend
 -------------
 
-
 Requires:
 
-* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism.
+* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism. Behind the scenes, it use Redlock. This `page <https://redis.io/topics/distlock>`_ has more infomation about the locking guarantees.
 
 Configuration:
 
@@ -198,6 +197,10 @@ Configuration:
   - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
 
   - ``url`` - should point towards a running Redis instance (defaults to ``redis://localhost:6379/0``). See below for the format options supported
+
+  - ``blocking`` (boolean value: default ``False``) - If set to ``True``, scheduling a task (by ``.delay/.apply_async``) will block for X seconds to acquire the lock (see: ``blocking_timeout`` below). If no lock could be acquired after X seconds, will raise an ``AlreadyQueued`` exception. This is a very specific use-case scenario and by default is disabled.
+
+  - ``blocking_timeout`` (int or float value: default ``1``) - How many seconds the task will block trying to aquire the lock, if ``blocking`` is set to ``True``. Setting this to ``None`` set's no timeout (equivalent to infinite seconds).
 
 
 
@@ -216,6 +219,8 @@ The URL parser supports two patterns of urls:
 
 Example Configuration:
 
+Minimal:
+
 .. code:: python
 
     celery.conf.ONCE = {
@@ -226,6 +231,21 @@ Example Configuration:
       }
     }
 
+
+Advanced:
+Scheduling tasks blocks up to 30 seconds trying to acquire a lock before raising an exception.
+
+    .. code:: python
+
+        celery.conf.ONCE = {
+          'backend': 'celery_once.backends.Redis',
+          'settings': {
+            'url': 'redis://localhost:6379/0',
+            'default_timeout': 60 * 60,
+            'blocking': True,
+            'blocking_timeout': 30
+          }
+        }
 
 Custom Backend
 --------------

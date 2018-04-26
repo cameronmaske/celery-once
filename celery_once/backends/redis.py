@@ -11,7 +11,6 @@ except:
     # Python 3!
     from urllib.parse import urlparse, parse_qsl
 
-from celery_once.helpers import now_unix
 from celery_once.tasks import AlreadyQueued
 
 
@@ -55,6 +54,13 @@ def parse_url(url):
 
 redis = None
 
+try:
+    from redis.lock import Lock
+except ImportError:
+    raise ImportError(
+        "You need to install the redis library in order to use Redis"
+        " backend (pip install redis)")
+
 
 def get_redis(settings):
     global redis
@@ -70,10 +76,12 @@ def get_redis(settings):
 
 
 class Redis(object):
-    """Redis backend."""
+    """Redis locking backend."""
 
     def __init__(self, settings):
         self._redis = get_redis(settings)
+        self.blocking_timeout = settings.get("blocking_timeout", 1)
+        self.blocking = settings.get("blocking", False)
 
     @property
     def redis(self):
@@ -83,20 +91,22 @@ class Redis(object):
     def raise_or_lock(self, key, timeout):
         """
         Checks if the task is locked and raises an exception, else locks
-        the task.
+        the task. By default, the tasks and the key expire after 60 minutes.
+        (meaning it will not be executed and the lock will clear).
         """
-        now = now_unix()
-        # Check if the tasks is already queued if key is in cache.
-        result = self.redis.get(key)
-        if result:
-            # Work out how many seconds remaining till the task timeout.
-            remaining = int(result) - now
-            if remaining > 0:
-                raise AlreadyQueued(remaining)
+        acquired = Lock(
+            self.redis,
+            key,
+            timeout=timeout,
+            blocking=self.blocking,
+            blocking_timeout=self.blocking_timeout
+        ).acquire()
 
-        # By default, the tasks and the key expire after 60 minutes.
-        # (meaning it will not be executed and the lock will clear).
-        self.redis.setex(key, timeout, now + timeout)
+        if not acquired:
+            # Time remaining in milliseconds
+            # https://redis.io/commands/pttl
+            ttl = self.redis.pttl(key)
+            raise AlreadyQueued(ttl / 1000.)
 
     def clear_lock(self, key):
         """Remove the lock from redis."""

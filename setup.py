@@ -8,7 +8,7 @@ with open('README.rst') as f:
 
 requirements = [
     "celery",
-    "redis"
+    "redis>=2.10.2"
 ]
 
 __version__ = ''

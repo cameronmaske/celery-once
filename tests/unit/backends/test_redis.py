@@ -1,9 +1,10 @@
 import pytest
-from freezegun import freeze_time
+import time
 from fakeredis import FakeStrictRedis
 
 from celery_once.backends.redis import parse_url, Redis
 from celery_once.tasks import AlreadyQueued
+from redis.lock import Lock as RedisLock
 
 
 def test_parse_redis_details_tcp_default_args():
@@ -59,27 +60,29 @@ def backend():
     return backend
 
 
-@freeze_time("2012-01-14")  # Time since epoch = 1326499200
 def test_redis_raise_or_lock(redis, backend):
     assert redis.get("test") is None
     backend.raise_or_lock(key="test", timeout=60)
     assert redis.get("test") is not None
 
 
-@freeze_time("2012-01-14")  # Time since epoch = 1326499200
 def test_redis_raise_or_lock_locked(redis, backend):
     # Set to expire in 30 seconds!
-    redis.set("test", 1326499200 + 30)
+    lock = RedisLock(redis, "test", timeout=30)
+    lock.acquire()
+
     with pytest.raises(AlreadyQueued) as e:
         backend.raise_or_lock(key="test", timeout=60)
-    assert e.value.countdown == 30
-    assert e.value.message == "Expires in 30 seconds"
+
+    assert e.value.countdown == 30.0
+    assert e.value.message == "Expires in 30.0 seconds"
 
 
-@freeze_time("2012-01-14")  # Time since epoch = 1326499200
 def test_redis_raise_or_lock_locked_and_expired(redis, backend):
-    # Set to have expired 30 ago seconds!
-    redis.set("test", 1326499200 - 30)
+    lock = RedisLock(redis, "test", timeout=1)
+    lock.acquire()
+    time.sleep(1)  # wait for lock to expire
+
     backend.raise_or_lock(key="test", timeout=60)
     assert redis.get("test") is not None
 

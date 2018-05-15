@@ -57,7 +57,7 @@ When running the task, ``celery_once`` checks that no lock is in place (against 
 If it isn't, the task will run as normal. Once the task completes (or ends due to an exception) the lock will clear.
 If an attempt is made to run the task again before it completes an ``AlreadyQueued`` exception will be raised.
 
-.. code-block:: pycon
+.. code-block:: python
 
     example.delay(10)
     example.delay(10)
@@ -65,7 +65,7 @@ If an attempt is made to run the task again before it completes an ``AlreadyQueu
         ..
     AlreadyQueued()
 
-.. code-block:: pycon
+.. code-block:: python
 
     result = example.apply_async(args=(10))
     result = example.apply_async(args=(10))
@@ -118,7 +118,7 @@ Running the task with different arguments will default to checking against diffe
 
 If you want to specify locking based on a subset, or no arguments you can adjust the keys ``celery_once`` looks at in the task's `options <http://celery.readthedocs.org/en/latest/userguide/tasks.html#list-of-options>`_ with ``once={'keys': [..]}``
 
-.. code:: pycon
+.. code:: python
 
     @celery.task(base=QueueOnce, once={'keys': ['a']})
     def slow_add(a, b):
@@ -133,7 +133,7 @@ If you want to specify locking based on a subset, or no arguments you can adjust
     AlreadyQueued()
     example.delay(2, 2)
 
-.. code:: pycon
+.. code:: python
 
     @celery.task(base=QueueOnce, once={'keys': []})
     def slow_add(a, b):

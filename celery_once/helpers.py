@@ -64,7 +64,7 @@ def kwargs_to_list(kwargs):
     # Kwargs are sorted in alphabetic order by their keys.
     # Taken from http://www.saltycrane.com/blog/2007/09/how-to-sort-python-dictionary-by-keys/
     for k, v in items_sorted_by_key(kwargs):
-        kwargs_list.append(str(k) + '-' + str(force_string(v)))
+        kwargs_list.append(six.text_type(k) + '-' + six.text_type(force_string(v)))
     return kwargs_list
 
 

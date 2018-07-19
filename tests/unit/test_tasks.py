@@ -23,6 +23,11 @@ def select_args_example(a, b):
     return a + b
 
 
+@task(name='autoretry_for_example', base=QueueOnce, autoretry_for=(Exception,))
+def autoretry_for_example(a, b):
+    return a + b
+
+
 def test_get_key_simple():
     assert "qo_simple_example" == simple_example.get_key()
 
@@ -43,4 +48,9 @@ def test_get_key_select_args_1():
 
 def test_get_key_bound_task():
     assert "qo_bound_task_a-1_b-2" == bound_task.get_key(
+        kwargs={'a': 1, 'b': 2})
+
+
+def test_get_key_autoretry_for():
+    assert "qo_autoretry_for_example_a-1_b-2" == autoretry_for_example.get_key(
         kwargs={'a': 1, 'b': 2})

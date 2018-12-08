@@ -2,6 +2,6 @@ pytest==2.9.2
 pytest-cov==1.8.1
 pytest-mock==1.6.0
 python-coveralls==2.4.3
-fakeredis==0.9.0
+fakeredis==0.16.0
 mock==1.0.1
 freezegun==0.2.8

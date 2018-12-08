@@ -107,7 +107,8 @@ class QueueOnce(Task):
         restrict_to = self.once.get('keys', None)
         args = args or {}
         kwargs = kwargs or {}
-        call_args = getcallargs(self.run, *args, **kwargs)
+        call_args = getcallargs(
+                getattr(self, '_orig_run', self.run), *args, **kwargs)
         # Remove the task instance from the kwargs. This only happens when the
         # task has the 'bind' attribute set to True. We remove it, as the task
         # has a memory pointer in its repr, that will change between the task

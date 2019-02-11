@@ -10,6 +10,8 @@ install:
   - "pip install -r requirements-dev.txt"
 script:
   - py.test --cov celery_once --cov-report term-missing
+  - celery -A tests.integration.flask.app.celery worker
+  - sleep 5
   - py.test -m "framework"
 after_success:
   - coveralls

@@ -247,6 +247,49 @@ Scheduling tasks blocks up to 30 seconds trying to acquire a lock before raising
           }
         }
 
+Flask Intergration
+------------------
+To avoid ``RuntimeError: Working outside of application context`` errors when using ``celery_once`` with `Flask <http://flask.pocoo.org/docs/1.0/>`_, you need to make the ``QueueOnce`` task base class application context aware.
+If you've implemented Celery following the Flask `documentation <http://flask.pocoo.org/docs/1.0/patterns/celery/#configure>`_ you can extend it like so.
+
+    .. code:: python 
+
+        def make_celery(app):
+            celery = Celery(
+                app.import_name,
+                backend=app.config['CELERY_RESULT_BACKEND'],
+                broker=app.config['CELERY_BROKER_URL']
+            )
+            celery.conf.update(app.config)
+
+            class ContextTask(celery.Task):
+                def __call__(self, *args, **kwargs):
+                    with app.app_context():
+                        return self.run(*args, **kwargs)
+            celery.Task = ContextTask
+
+            # Make QueueOnce app context aware. 
+            class ContextQueueOnce(QueueOnce):
+                def __call__(self, *args, **kwargs):
+                    with app.app_context():
+                        return super(ContextQueueOnce, self).__call__(*args, **kwargs)
+
+            # Attach to celery object for easy access.
+            celery.QueueOnce = ContextQueueOnce
+            return celery
+
+
+Now, when instead of importing the ``QueueOnce`` base, you can use the context aware base on the ``celery`` object.
+
+    .. code:: python 
+
+        celery = make_celery(app)
+
+        @celery.task(base=celery.QueueOnce)
+        def example_task(value):
+            return
+
+
 Custom Backend
 --------------
 

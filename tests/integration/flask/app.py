@@ -2,6 +2,7 @@ from flask import Flask, has_app_context
 from celery import Celery
 from time import sleep 
 from celery_once import QueueOnce
+import os 
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 

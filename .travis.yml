@@ -1,4 +1,6 @@
 language: python
+services:
+  - redis-server
 python:
   - "2.7"
   - "3.5"
@@ -8,6 +10,6 @@ install:
   - "pip install -r requirements-dev.txt"
 script:
   - py.test --cov celery_once --cov-report term-missing
-  - 
+  - py.test -m "framework"
 after_success:
   - coveralls

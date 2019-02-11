@@ -3,6 +3,7 @@ from celery import Celery
 from time import sleep 
 from celery_once import QueueOnce
 
+REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379")
 
 def make_celery(app):
     celery = Celery(
@@ -28,14 +29,14 @@ def make_celery(app):
 
 flask_app = Flask(__name__)
 flask_app.config.update(
-    CELERY_BROKER_URL='redis://redis:6379/1',
-    CELERY_RESULT_BACKEND='redis://redis:6379/2',
+    CELERY_BROKER_URL='{}/1'.format(REDIS_URL),
+    CELERY_RESULT_BACKEND='{}/2'.format(REDIS_URL),
 )
 celery = make_celery(flask_app)
 celery.conf.ONCE = {
   'backend': 'celery_once.backends.Redis',
   'settings': {
-    'url': 'redis://redis:6379/3',
+    'url': '{}/3'.format(REDIS_URL),
     'default_timeout': 60 * 60
   }
 }

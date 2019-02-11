@@ -8,5 +8,6 @@ install:
   - "pip install -r requirements-dev.txt"
 script:
   - py.test --cov celery_once --cov-report term-missing
+  - 
 after_success:
   - coveralls

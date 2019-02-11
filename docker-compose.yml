@@ -1,0 +1,18 @@
+version: '3'
+services:
+    python:
+        build: .
+        command: 'pytest tests/ -m "framework"'
+        volumes:
+          - .:/code
+        depends_on:
+          - redis
+    flask_worker:
+        build: .
+        command: "celery -A tests.integration.flask.app.celery worker"
+        depends_on:
+          - redis
+        environment:
+          - C_FORCE_ROOT=True
+    redis:
+        image: redis:4.0-alpine

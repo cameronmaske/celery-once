@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, has_app_context
 from celery import Celery
 from time import sleep 
 from celery_once import QueueOnce
@@ -16,8 +16,14 @@ def make_celery(app):
         def __call__(self, *args, **kwargs):
             with app.app_context():
                 return self.run(*args, **kwargs)
+    
+    class ContextQueueOnce(QueueOnce):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return super(ContextQueueOnce, self).__call__(*args, **kwargs)
 
     celery.Task = ContextTask
+    celery.QueueOnce = ContextQueueOnce
     return celery
 
 flask_app = Flask(__name__)
@@ -35,7 +41,7 @@ celery.conf.ONCE = {
 }
 
 # Setting the `name` allow us to reach this task in the test folder. 
-@celery.task(name="tests.integration.flask.app.sleep_task", base=QueueOnce)
+@celery.task(name="tests.integration.flask.app.sleep_task", base=celery.QueueOnce)
 def sleep_task(value):
-    print(flask_app.config) # See if we can access app.
+    assert has_app_context() is True
     return sleep(value)

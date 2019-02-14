@@ -1,6 +1,7 @@
 """
 Definition of the file locking backend.
 """
+import errno
 import os
 import time
 
@@ -23,19 +24,27 @@ class FileBackend(object):
         Check the lock file and create one if it does not exist.
         """
         lock_path = self._get_lock_path(key)
-        if os.path.exists(lock_path):
-            # Check file modification time
-            mtime = os.path.getmtime(lock_path)
-            ttl = mtime + timeout - time.time()
-            if ttl > 0:
-                raise AlreadyQueued(ttl)
-        # Create lock file or update it after timeout
-        with open(lock_path, 'a'):
-            os.utime(lock_path, None)
+        try:
+            # Create lock file, raise exception if it exists
+            os.open(lock_path, os.O_CREAT | os.O_EXCL)
+        except OSError as error:
+            if error.errno == errno.EEXIST:
+                # File already exists, check its modification time
+                mtime = os.path.getmtime(lock_path)
+                ttl = mtime + timeout - time.time()
+                if ttl > 0:
+                    raise AlreadyQueued(ttl)
+                else:
+                    # Update modification time if timeout happens
+                    os.utime(lock_path, None)
+                    return
+            else:
+                # Re-raise unexpected OSError
+                raise
 
     def clear_lock(self, key):
         """
         Remove the lock file.
         """
         lock_path = self._get_lock_path(key)
-        return os.remove(lock_path)
+        os.remove(lock_path)

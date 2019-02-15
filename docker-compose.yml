@@ -1,0 +1,23 @@
+version: '3'
+services:
+    python:
+        build: .
+        command: 'pytest tests/ -m "framework"'
+        volumes:
+          - .:/code
+        environment:
+          - "REDIS_URL=redis://redis:6379"
+        depends_on:
+          - redis
+    flask_worker:
+        build: .
+        command: "celery -A tests.integration.flask_app.app.celery worker"
+        volumes:
+          - .:/code
+        depends_on:
+          - redis
+        environment:
+          - C_FORCE_ROOT=True
+          - "REDIS_URL=redis://redis:6379"
+    redis:
+        image: redis:4.0-alpine

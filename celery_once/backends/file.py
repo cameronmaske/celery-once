@@ -3,6 +3,7 @@ Definition of the file locking backend.
 """
 import errno
 import os
+import tempfile
 import time
 
 from celery_once.tasks import AlreadyQueued
@@ -13,8 +14,17 @@ class FileBackend(object):
     File locking backend.
     """
     def __init__(self, settings):
-        self.location = settings['location']
-        os.makedirs(self.location, exist_ok=True)
+        self.location = settings.get('location')
+        if self.location is None:
+            self.location = os.path.join(tempfile.gettempdir(),
+                                         'celery_once')
+        try:
+            os.makedirs(self.location)
+        except OSError as error:
+            # Directory exists?
+            if error.errno != errno.EEXIST:
+                # Re-raise unexpected OSError
+                raise
 
     def _get_lock_path(self, key):
         return os.path.join(self.location, key)

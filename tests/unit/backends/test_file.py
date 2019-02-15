@@ -1,11 +1,41 @@
 import errno
 import os
+import tempfile
 import time
 
 import pytest
 
 from celery_once.backends.file import FileBackend
 from celery_once.tasks import AlreadyQueued
+
+
+def test_file_init(mocker):
+    makedirs_mock = mocker.patch('celery_once.backends.file.os.makedirs')
+    location = '/home/test'
+    backend = FileBackend({'location': location})
+
+    assert backend.location == location
+    assert makedirs_mock.called is True
+    assert makedirs_mock.call_args[0] == (location,)
+
+
+def test_file_init_default(mocker):
+    makedirs_mock = mocker.patch('celery_once.backends.file.os.makedirs')
+    backend = FileBackend({})
+
+    assert backend.location == os.path.join(tempfile.gettempdir(),
+                                            'celery_once')
+    assert makedirs_mock.called is True
+
+
+def test_file_init_location_exists(mocker):
+    makedirs_mock = mocker.patch('celery_once.backends.file.os.makedirs',
+                                 side_effect=OSError(errno.EEXIST, 'error'))
+    location = '/home/test'
+    backend = FileBackend({'location': location})
+
+    assert backend.location == location
+    assert makedirs_mock.called is True
 
 
 TEST_LOCATION = '/tmp/celery'
@@ -16,10 +46,6 @@ def backend(mocker):
     mocker.patch('celery_once.backends.file.os.makedirs')
     backend = FileBackend({'location': TEST_LOCATION})
     return backend
-
-
-def test_file_init(backend):
-    assert backend.location == TEST_LOCATION
 
 
 def test_file_create_lock(backend, mocker):

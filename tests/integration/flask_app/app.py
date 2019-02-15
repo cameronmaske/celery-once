@@ -43,7 +43,7 @@ celery.conf.ONCE = {
 }
 
 # Setting the `name` allow us to reach this task in the test folder. 
-@celery.task(name="tests.integration.flask.app.sleep_task", base=celery.QueueOnce)
+@celery.task(name="tests.integration.flask_app.app.sleep_task", base=celery.QueueOnce)
 def sleep_task(value):
     assert has_app_context() is True
     return sleep(value)

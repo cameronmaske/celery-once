@@ -11,7 +11,7 @@ services:
           - redis
     flask_worker:
         build: .
-        command: "celery -A tests.integration.flask.app.celery worker"
+        command: "celery -A tests.integration.flask_app.app.celery worker"
         volumes:
           - .:/code
         depends_on:

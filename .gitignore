@@ -1,3 +1,7 @@
+# Project specific 
+example/
+Pipfile 
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -102,3 +106,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# OSX 
+*.DS_Store

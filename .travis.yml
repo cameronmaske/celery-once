@@ -9,9 +9,9 @@ install:
   - "pip install -e ."
   - "pip install -r requirements-dev.txt"
 script:
-  - py.test --cov celery_once --cov-report term-missing
-  - celery -A tests.integration.flask.app.celery worker
+  - pytest --cov celery_once --cov-report term-missing
+  - celery -A tests.integration.flask.app.celery worker&
   - sleep 5
-  - py.test -m "framework"
+  - pytest -m "framework"
 after_success:
   - coveralls

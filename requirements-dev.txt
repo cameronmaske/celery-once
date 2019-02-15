@@ -6,5 +6,5 @@ coverage==4.5.2
 fakeredis==0.16.0
 mock==1.0.1
 freezegun==0.2.8
-Flask==0.12
-celery==3.1.23
+Flask
+celery

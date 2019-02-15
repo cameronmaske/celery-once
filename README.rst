@@ -247,6 +247,33 @@ Scheduling tasks blocks up to 30 seconds trying to acquire a lock before raising
           }
         }
 
+File Backend
+-------------
+
+Configuration:
+
+-  ``backend`` - ``celery_once.backends.FileBackend``
+
+-  ``settings``
+
+  - ``location`` - directory where lock files will be located. Default is temporary directory.
+
+  - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
+
+
+Example Configuration:
+
+.. code:: python
+
+    celery.conf.ONCE = {
+        'backend': 'celery_once.backends.FileBackend',
+        'settings': {
+            'location': '/tmp/celery_once',
+            'default_timeout': 60 * 60
+        }
+    }
+
+
 Flask Intergration
 ------------------
 To avoid ``RuntimeError: Working outside of application context`` errors when using ``celery_once`` with `Flask <http://flask.pocoo.org/docs/1.0/>`_, you need to make the ``QueueOnce`` task base class application context aware.

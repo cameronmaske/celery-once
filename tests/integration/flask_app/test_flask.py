@@ -1,4 +1,5 @@
-from app import sleep_task 
+from __future__ import absolute_import
+from tests.integration.flask_app.app import sleep_task 
 from time import sleep
 import pytest
 from celery_once import AlreadyQueued

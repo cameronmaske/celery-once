@@ -1,6 +1,12 @@
 History
 =======
 
+2.0.1
+-----
+2019-02-25
+
+- Fixed an issue when using ``autoretry_for`` with a task. (#74, #75). Thanks @pkariz.
+
 2.0.0
 -----
 

@@ -22,13 +22,6 @@ def import_backend(config):
     return backend_class(config['settings'])
 
 
-def now_unix():
-    """
-    Returns the current time in UNIX time.
-    """
-    return int(time())
-
-
 def items_sorted_by_key(kwargs):
     return sorted(six.iteritems(kwargs), key=operator.itemgetter(0))
 

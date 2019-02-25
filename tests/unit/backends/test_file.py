@@ -5,14 +5,14 @@ import time
 
 import pytest
 
-from celery_once.backends.file import FileBackend
+from celery_once.backends.file import File
 from celery_once.tasks import AlreadyQueued
 
 
 def test_file_init(mocker):
     makedirs_mock = mocker.patch('celery_once.backends.file.os.makedirs')
     location = '/home/test'
-    backend = FileBackend({'location': location})
+    backend = File({'location': location})
 
     assert backend.location == location
     assert makedirs_mock.called is True
@@ -21,7 +21,7 @@ def test_file_init(mocker):
 
 def test_file_init_default(mocker):
     makedirs_mock = mocker.patch('celery_once.backends.file.os.makedirs')
-    backend = FileBackend({})
+    backend = File({})
 
     assert backend.location == os.path.join(tempfile.gettempdir(),
                                             'celery_once')
@@ -32,7 +32,7 @@ def test_file_init_location_exists(mocker):
     makedirs_mock = mocker.patch('celery_once.backends.file.os.makedirs',
                                  side_effect=OSError(errno.EEXIST, 'error'))
     location = '/home/test'
-    backend = FileBackend({'location': location})
+    backend = File({'location': location})
 
     assert backend.location == location
     assert makedirs_mock.called is True
@@ -44,7 +44,7 @@ TEST_LOCATION = '/tmp/celery'
 @pytest.fixture()
 def backend(mocker):
     mocker.patch('celery_once.backends.file.os.makedirs')
-    backend = FileBackend({'location': TEST_LOCATION})
+    backend = File({'location': TEST_LOCATION})
     return backend
 
 

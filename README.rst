@@ -252,7 +252,7 @@ File Backend
 
 Configuration:
 
--  ``backend`` - ``celery_once.backends.FileBackend``
+-  ``backend`` - ``celery_once.backends.File``
 
 -  ``settings``
 
@@ -266,7 +266,7 @@ Example Configuration:
 .. code:: python
 
     celery.conf.ONCE = {
-        'backend': 'celery_once.backends.FileBackend',
+        'backend': 'celery_once.backends.File',
         'settings': {
             'location': '/tmp/celery_once',
             'default_timeout': 60 * 60

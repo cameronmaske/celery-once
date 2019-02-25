@@ -9,7 +9,7 @@ import time
 from celery_once.tasks import AlreadyQueued
 
 
-class FileBackend(object):
+class File(object):
     """
     File locking backend.
     """

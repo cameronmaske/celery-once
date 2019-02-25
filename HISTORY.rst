@@ -1,6 +1,12 @@
 History
 =======
 
+2.1.0
+-----
+2019-02-25
+
+- Added ``File`` backend (#84). Credit and thanks to @xuhcc.
+
 2.0.1
 -----
 2019-02-25

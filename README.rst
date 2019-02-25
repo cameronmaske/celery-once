@@ -162,7 +162,7 @@ This is set globally in Celery's configuration with ``ONCE_DEFAULT_TIMEOUT`` but
 
 ``unlock_before_run``
 ---------------------
-By default, the lock is removed after the task has executed (using celery's `after_return <https://celery.readthedocs.org/en/latest/reference/celery.app.task.html#celery.app.task.Task.after_return>`_). This behaviour can be changed setting the task's option ``unlock_before_run``. When set to ``True``, the lock will be removed just before executing the task.
+By default, the lock is removed after the task has executed (using celery's `after_return <https://celery.readthedocs.org/en/latest/reference/celery.app.task.html#celery.app.task.Task.after_return>`_. This behaviour can be changed setting the task's option ``unlock_before_run``. When set to ``True``, the lock will be removed just before executing the task.
 
 **Caveats**:
   * Any retry of the task won't re-enable the lock!
@@ -186,7 +186,7 @@ Redis Backend
 
 Requires:
 
-* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism. Behind the scenes, it use Redlock. This `page <https://redis.io/topics/distlock>`_ has more infomation about the locking guarantees.
+* `Redis <http://redis.io/>`_ is used as a distributed locking mechanism. Behind the scenes, it use redis-py's `shared, distributed Lock <https://github.com/andymccurdy/redis-py/blob/31519e4ccef49fb59254ee5524007c81faa7e850/redis/lock.py#L8>`_.
 
 Configuration:
 

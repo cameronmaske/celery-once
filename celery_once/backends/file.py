@@ -36,7 +36,7 @@ class File(object):
         lock_path = self._get_lock_path(key)
         try:
             # Create lock file, raise exception if it exists
-            os.open(lock_path, os.O_CREAT | os.O_EXCL)
+            fd = os.open(lock_path, os.O_CREAT | os.O_EXCL)
         except OSError as error:
             if error.errno == errno.EEXIST:
                 # File already exists, check its modification time
@@ -51,6 +51,8 @@ class File(object):
             else:
                 # Re-raise unexpected OSError
                 raise
+        else:
+            os.close(fd)
 
     def clear_lock(self, key):
         """

@@ -8,3 +8,4 @@ mock==1.0.1
 Flask
 celery
 redis==3.2.1
+six==1.12.0

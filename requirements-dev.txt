@@ -3,7 +3,9 @@ pytest-cov==2.6.1
 pytest-mock==1.10.1
 python-coveralls==2.9.1
 coverage==4.5.2
-fakeredis==0.16.0
+fakeredis==1.0.3
 mock==1.0.1
 Flask
 celery
+redis==3.2.1
+six==1.12.0

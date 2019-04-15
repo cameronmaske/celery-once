@@ -54,6 +54,7 @@ def test_file_create_lock(backend, mocker):
     open_mock = mocker.patch('celery_once.backends.file.os.open')
     mtime_mock = mocker.patch('celery_once.backends.file.os.path.getmtime')
     utime_mock = mocker.patch('celery_once.backends.file.os.utime')
+    close_mock = mocker.patch('celery_once.backends.file.os.close')
     expected_lock_path = os.path.join(TEST_LOCATION, key)
     ret = backend.raise_or_lock(key, timeout)
 
@@ -63,6 +64,7 @@ def test_file_create_lock(backend, mocker):
         os.O_CREAT | os.O_EXCL,
     )
     assert utime_mock.called is False
+    assert close_mock.called is True
     assert ret is None
 
 def test_file_lock_exists(backend, mocker):
@@ -78,11 +80,13 @@ def test_file_lock_exists(backend, mocker):
         'celery_once.backends.file.time.time',
         return_value=1550156000.0)
     utime_mock = mocker.patch('celery_once.backends.file.os.utime')
+    close_mock = mocker.patch('celery_once.backends.file.os.close')
     with pytest.raises(AlreadyQueued) as exc_info:
         backend.raise_or_lock(key, timeout)
 
     assert open_mock.call_count == 1
     assert utime_mock.called is False
+    assert close_mock.called is False
     assert exc_info.value.countdown == timeout - 1000
 
 def test_file_lock_timeout(backend, mocker):
@@ -98,12 +102,14 @@ def test_file_lock_timeout(backend, mocker):
         'celery_once.backends.file.time.time',
         return_value=1550156000.0)
     utime_mock = mocker.patch('celery_once.backends.file.os.utime')
+    close_mock = mocker.patch('celery_once.backends.file.os.close')
     expected_lock_path = os.path.join(TEST_LOCATION, key)
     ret = backend.raise_or_lock(key, timeout)
 
     assert open_mock.call_count == 1
     assert utime_mock.call_count == 1
     assert utime_mock.call_args[0] == (expected_lock_path, None)
+    assert close_mock.called is False
     assert ret is None
 
 def test_file_clear_lock(backend, mocker):

@@ -110,4 +110,5 @@ class Redis(object):
 
     def clear_lock(self, key):
         """Remove the lock from redis."""
-        return self.redis.delete(key)
+        self.redis.delete(key)
+        self.redis.flushall()

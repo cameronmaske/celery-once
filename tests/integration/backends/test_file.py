@@ -23,7 +23,7 @@ def example(a=1):
 
 @pytest.fixture()
 def lock_path():
-    path = '/tmp/celery_once/qo_example_a-1'
+    path = '/tmp/celery_once/qo_example_a-1_b7f89d8561e5788a3e7687c6ede93bcd'
     yield path
     os.remove(path) # Remove file after test function runs.
 

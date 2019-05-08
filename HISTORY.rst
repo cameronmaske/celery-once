@@ -1,6 +1,12 @@
 History
 =======
 
+2.1.1
+-----
+2019-05-08
+
+- Fix an issue with the ``File`` backend (#89) to close file after creation, else unclosed file descriptors eventually lead to an "Too many open files" error. Thanks @xuhcc.
+
 2.1.0
 -----
 2019-02-25

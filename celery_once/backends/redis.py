@@ -21,6 +21,7 @@ def parse_url(url):
         * redis://host:port[/db][?options]
         * rediss://host:port[/db][?options]
         * redis+socket:///path/to/redis.sock[?options]
+    Add `?ssl=true` at the end of the url when using `rediss://`.
     A ValueError is raised if the URL is not recognized.
     """
     parsed = urlparse(url)

@@ -220,7 +220,7 @@ The URL parser supports three patterns of urls:
 
   * ``redis+socket:///var/run/redis/redis.sock?db=1``
 
-Add `?ssl=true` at the end of the url When using `rediss://`.
+Add `?ssl=true` at the end of the url when using `rediss://`.
 
 Example Configuration:
 

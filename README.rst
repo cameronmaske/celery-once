@@ -216,10 +216,11 @@ The URL parser supports three patterns of urls:
   Examples:
   * ``redis://localhost:6379/1``
 
-  * ``rediss://localhost:6379/1``
+  * ``rediss://localhost:6379/1?ssl=true``
 
   * ``redis+socket:///var/run/redis/redis.sock?db=1``
 
+Add `?ssl=true` at the end of the url When using `rediss://`.
 
 Example Configuration:
 

@@ -1,6 +1,12 @@
 History
 =======
 
+2.1.2
+-----
+2019-05-13
+
+- Add support for 'rediss'. Thanks @gustavoalmeida
+
 2.1.1
 -----
 2019-05-08

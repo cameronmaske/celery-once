@@ -215,8 +215,10 @@ The URL parser supports three patterns of urls:
   The ``options`` query args are mapped to the `StrictRedis <https://redis-py.readthedocs.org/en/latest/index.html#redis.StrictRedis>`_ keyword args.
   Examples:
   * ``redis://localhost:6379/1``
+  
+  * ``redis://localhost:6379/1?ssl=true``
 
-  * ``rediss://localhost:6379/1?ssl=true``
+  * ``rediss://localhost:6379/1``
 
   * ``redis+socket:///var/run/redis/redis.sock?db=1``
 

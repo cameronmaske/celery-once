@@ -5,8 +5,15 @@ import time
 
 import pytest
 
-from celery_once.backends.file import File
+from celery_once.backends.file import key_to_lock_name, File
 from celery_once.tasks import AlreadyQueued
+
+
+def test_key_to_lock_name():
+    assert key_to_lock_name('qo_test') == \
+        'qo_test_999f583e69db6a0c04b86beeebb2b631'
+    assert key_to_lock_name('qo_looooooong_task_name') == \
+        'qo_looooooong_tas_6626e5965e549303044d5a7f4fdc3c6b'
 
 
 def test_file_init(mocker):
@@ -55,7 +62,8 @@ def test_file_create_lock(backend, mocker):
     mtime_mock = mocker.patch('celery_once.backends.file.os.path.getmtime')
     utime_mock = mocker.patch('celery_once.backends.file.os.utime')
     close_mock = mocker.patch('celery_once.backends.file.os.close')
-    expected_lock_path = os.path.join(TEST_LOCATION, key)
+    expected_lock_path = os.path.join(TEST_LOCATION,
+                                      key_to_lock_name(key))
     ret = backend.raise_or_lock(key, timeout)
 
     assert open_mock.call_count == 1
@@ -103,7 +111,8 @@ def test_file_lock_timeout(backend, mocker):
         return_value=1550156000.0)
     utime_mock = mocker.patch('celery_once.backends.file.os.utime')
     close_mock = mocker.patch('celery_once.backends.file.os.close')
-    expected_lock_path = os.path.join(TEST_LOCATION, key)
+    expected_lock_path = os.path.join(TEST_LOCATION,
+                                      key_to_lock_name(key))
     ret = backend.raise_or_lock(key, timeout)
 
     assert open_mock.call_count == 1
@@ -115,7 +124,8 @@ def test_file_lock_timeout(backend, mocker):
 def test_file_clear_lock(backend, mocker):
     key = 'test.task.key'
     remove_mock = mocker.patch('celery_once.backends.file.os.remove')
-    expected_lock_path = os.path.join(TEST_LOCATION, key)
+    expected_lock_path = os.path.join(TEST_LOCATION,
+                                      key_to_lock_name(key))
     ret = backend.clear_lock(key)
 
     assert remove_mock.call_count == 1

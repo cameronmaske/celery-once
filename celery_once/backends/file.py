@@ -1,12 +1,25 @@
 """
 Definition of the file locking backend.
 """
+import hashlib
 import errno
 import os
 import tempfile
 import time
 
+import six
+
 from celery_once.tasks import AlreadyQueued
+
+
+def key_to_lock_name(key):
+    """
+    Combine part of a key with its hash to prevent very long filenames
+    """
+    MAX_LENGTH = 50
+    key_hash = hashlib.md5(six.b(key)).hexdigest()
+    lock_name = key[:MAX_LENGTH - len(key_hash) - 1] + '_' + key_hash
+    return lock_name
 
 
 class File(object):
@@ -27,7 +40,8 @@ class File(object):
                 raise
 
     def _get_lock_path(self, key):
-        return os.path.join(self.location, key)
+        lock_name = key_to_lock_name(key)
+        return os.path.join(self.location, lock_name)
 
     def raise_or_lock(self, key, timeout):
         """

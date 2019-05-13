@@ -18,10 +18,11 @@ def parse_url(url):
     """
     Parse the argument url and return a redis connection.
     Three patterns of url are supported:
+
         * redis://host:port[/db][?options]
-        * rediss://host:port[/db][?options]
         * redis+socket:///path/to/redis.sock[?options]
-    Add `?ssl=true` at the end of the url when using `rediss://`.
+        * rediss://host:port[/db][?options]
+
     A ValueError is raised if the URL is not recognized.
     """
     parsed = urlparse(url)
@@ -37,6 +38,8 @@ def parse_url(url):
         db = parsed.path.lstrip('/')
         if db and db.isdigit():
             details['db'] = db
+        if parsed.scheme == 'rediss':
+            details['ssl'] = True
 
     # Unix socket redis connection
     elif parsed.scheme == 'redis+socket':

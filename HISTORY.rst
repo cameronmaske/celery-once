@@ -1,11 +1,22 @@
 History
 =======
 
+3.0.0
+-----
+2019-05-13
+
+Fixed an issue where large/long arguments could cause ``OSError Filename too long`` with the file backend (see #96).
+Keys generated for file backend, are now hashed and limited to 50 characters in length.
+*Due to this, it is not backwards compatible with existing keys from the file backend, so any pending locks from previous version will be ignored.*
+The Redis backend is unchanged, and thus fully compatible.
+
+Credit for fix to @xuhcc.
+
 2.1.2
 -----
 2019-05-13
 
-- Add support for 'rediss'. Thanks @gustavoalmeida
+- Add support for ``rediss``. Thanks @gustavoalmeida
 
 2.1.1
 -----

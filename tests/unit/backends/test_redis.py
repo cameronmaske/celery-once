@@ -1,4 +1,5 @@
 import pytest
+from pytest import approx
 import time
 from fakeredis import FakeStrictRedis
 
@@ -70,7 +71,6 @@ def test_redis_raise_or_lock(redis, backend):
     backend.raise_or_lock(key="test", timeout=60)
     assert redis.get("test") is not None
 
-
 def test_redis_raise_or_lock_locked(redis, backend):
     # Set to expire in 30 seconds!
     lock = RedisLock(redis, "test", timeout=30)
@@ -79,8 +79,8 @@ def test_redis_raise_or_lock_locked(redis, backend):
     with pytest.raises(AlreadyQueued) as e:
         backend.raise_or_lock(key="test", timeout=60)
 
-    assert e.value.countdown == 30.0
-    assert e.value.message == "Expires in 30.0 seconds"
+    assert e.value.countdown == approx(30.0, rel=0.1)
+    assert "Expires in" in e.value.message
 
 
 def test_redis_raise_or_lock_locked_and_expired(redis, backend):

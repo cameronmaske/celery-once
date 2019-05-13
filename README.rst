@@ -204,15 +204,21 @@ Configuration:
 
 
 
-The URL parser supports two patterns of urls:
+The URL parser supports three patterns of urls:
 
 * ``redis://host:port[/db][?options]``: redis over TCP
+
+* ``rediss://host:port[/db][?options]``: redis over TCP with SSL enabled.
 
 * ``redis+socket:///path/to/redis.sock[?options]``: redis over a UNIX socket
 
   The ``options`` query args are mapped to the `StrictRedis <https://redis-py.readthedocs.org/en/latest/index.html#redis.StrictRedis>`_ keyword args.
   Examples:
   * ``redis://localhost:6379/1``
+  
+  * ``redis://localhost:6379/1?ssl=true``
+
+  * ``rediss://localhost:6379/1``
 
   * ``redis+socket:///var/run/redis/redis.sock?db=1``
 
@@ -279,7 +285,7 @@ Flask Intergration
 To avoid ``RuntimeError: Working outside of application context`` errors when using ``celery_once`` with `Flask <http://flask.pocoo.org/docs/1.0/>`_, you need to make the ``QueueOnce`` task base class application context aware.
 If you've implemented Celery following the Flask `documentation <http://flask.pocoo.org/docs/1.0/patterns/celery/#configure>`_ you can extend it like so.
 
-    .. code:: python 
+    .. code:: python
 
         def make_celery(app):
             celery = Celery(
@@ -295,7 +301,7 @@ If you've implemented Celery following the Flask `documentation <http://flask.po
                         return self.run(*args, **kwargs)
             celery.Task = ContextTask
 
-            # Make QueueOnce app context aware. 
+            # Make QueueOnce app context aware.
             class ContextQueueOnce(QueueOnce):
                 def __call__(self, *args, **kwargs):
                     with app.app_context():
@@ -308,7 +314,7 @@ If you've implemented Celery following the Flask `documentation <http://flask.po
 
 Now, when instead of importing the ``QueueOnce`` base, you can use the context aware base on the ``celery`` object.
 
-    .. code:: python 
+    .. code:: python
 
         celery = make_celery(app)
 

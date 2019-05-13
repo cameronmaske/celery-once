@@ -17,16 +17,19 @@ from celery_once.tasks import AlreadyQueued
 def parse_url(url):
     """
     Parse the argument url and return a redis connection.
-    Two patterns of url are supported:
+    Three patterns of url are supported:
+
         * redis://host:port[/db][?options]
         * redis+socket:///path/to/redis.sock[?options]
+        * rediss://host:port[/db][?options]
+
     A ValueError is raised if the URL is not recognized.
     """
     parsed = urlparse(url)
     kwargs = parse_qsl(parsed.query)
 
     # TCP redis connection
-    if parsed.scheme == 'redis':
+    if parsed.scheme in ['redis', 'rediss']:
         details = {'host': parsed.hostname}
         if parsed.port:
             details['port'] = parsed.port
@@ -35,6 +38,8 @@ def parse_url(url):
         db = parsed.path.lstrip('/')
         if db and db.isdigit():
             details['db'] = db
+        if parsed.scheme == 'rediss':
+            details['ssl'] = True
 
     # Unix socket redis connection
     elif parsed.scheme == 'redis+socket':

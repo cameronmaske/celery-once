@@ -42,6 +42,11 @@ def test_parse_url_unix_sock_with_options():
     }
 
 
+def test_parse_url_with_ssl():
+    details = parse_url('rediss://localhost:6379/3')
+    assert details == {'host': 'localhost', 'port': 6379, 'db': 3, 'ssl': True}
+
+
 def test_parse_unsupported_url():
     with pytest.raises(ValueError):
         parse_url('amqp://guest:guest@localhost:5672/potato')

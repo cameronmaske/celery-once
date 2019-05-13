@@ -74,7 +74,7 @@ def test_redis_raise_or_lock_locked(redis, backend):
     with pytest.raises(AlreadyQueued) as e:
         backend.raise_or_lock(key="test", timeout=60)
 
-    assert e.value.countdown == approx(30.0)
+    assert e.value.countdown == approx(30.0, rel=0.1)
     assert "Expires in" in e.value.message
 
 

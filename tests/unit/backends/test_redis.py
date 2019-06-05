@@ -94,9 +94,13 @@ def test_redis_raise_or_lock_locked_and_expired(redis, backend):
 
 def test_redis_clear_lock(redis, backend):
     redis.set("test", 1326499200 + 30)
-    backend.clear_lock("test")
-    assert redis.get("test") is None
+    backend.clear_lock("test", "wrong id")
+    assert redis.get("test") is not None
 
+def test_redis_clear_lock(redis, backend):
+    redis.set("test", 1326499200 + 30)
+    backend.clear_lock("test", redis.get("test").decode())
+    assert redis.get("test") is None
 
 def test_redis_cached_property(mocker, monkeypatch):
     # Remove any side effect previous tests could have had

@@ -126,7 +126,14 @@ def test_file_clear_lock(backend, mocker):
     remove_mock = mocker.patch('celery_once.backends.file.os.remove')
     expected_lock_path = os.path.join(TEST_LOCATION,
                                       key_to_lock_name(key))
-    ret = backend.clear_lock(key)
+
+
+    mocker.patch(
+        'src.update_logstash.subprocess.Popen',
+        return_value=mocker.MagicMock(__enter__=mocker.MagicMock(
+            return_value="unlock value"))).start()
+
+    ret = backend.clear_lock(key, "unlock value")
 
     assert remove_mock.call_count == 1
     assert remove_mock.call_args[0] == (expected_lock_path,)

@@ -83,7 +83,8 @@ def test_retry():
     example_retry.apply_async()
     example.once_backend.raise_or_lock.assert_called_with(
         "qo_example_retry", timeout=60)
-    example.once_backend.clear_lock.assert_called_with("qo_example_retry")
+
+    example.once_backend.clear_lock.assert_called_with("qo_example_retry", example_retry.lock_id)
 
 
 def test_delay_unlock_before_run(mocker):
@@ -96,4 +97,4 @@ def test_delay_unlock_before_run(mocker):
     example_unlock_before_run.after_return = after_return_mock
     example_unlock_before_run.apply_async()
     assert len(mock_parent.mock_calls) == 2
-    assert mock_parent.mock_calls[0] == mocker.call.clear_lock('qo_example_unlock_before_run')
+    assert mock_parent.mock_calls[0] == mocker.call.clear_lock('qo_example_unlock_before_run', example_unlock_before_run.lock_id)

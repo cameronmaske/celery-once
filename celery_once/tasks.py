@@ -19,6 +19,7 @@ class QueueOnce(Task):
         'graceful': False,
         'unlock_before_run': False
     }
+    lock_id = None
 
     """
     'There can be only one'. - Highlander (1986)
@@ -61,9 +62,11 @@ class QueueOnce(Task):
     def __call__(self, *args, **kwargs):
         # Only clear the lock before the task's execution if the
         # "unlock_before_run" option is True
+
         if self.unlock_before_run():
             key = self.get_key(args, kwargs)
-            self.once_backend.clear_lock(key)
+            self.once_backend.clear_lock(key, self.lock_id)
+
         return super(QueueOnce, self).__call__(*args, **kwargs)
 
     def apply_async(self, args=None, kwargs=None, **options):
@@ -92,12 +95,25 @@ class QueueOnce(Task):
         if not options.get('retries'):
             key = self.get_key(args, kwargs)
             try:
-                self.once_backend.raise_or_lock(key, timeout=once_timeout)
+                self.lock_id = self.once_backend.raise_or_lock(
+                    key, timeout=once_timeout)
+                    
             except AlreadyQueued as e:
                 if once_graceful:
                     return EagerResult(None, None, states.REJECTED)
                 raise e
-        return super(QueueOnce, self).apply_async(args, kwargs, **options)
+        options['headers'] = options.get('headers', None) or {}
+        options['headers']["celery_once_lock_id"] = self.lock_id
+
+        return super(QueueOnce, self).apply_async(
+            args, kwargs, **options)
+
+    def retry(self, *args, **kwargs):
+        kwargs['headers'] = kwargs.get('headers', None) or {}
+        kwargs['headers']["celery_once_lock_id"] = self.lock_id
+
+        return super(QueueOnce, self).retry(
+            *args, **kwargs)
 
     def get_key(self, args=None, kwargs=None):
         """
@@ -127,4 +143,4 @@ class QueueOnce(Task):
         # "unlock_before_run" option is False
         if not self.unlock_before_run():
             key = self.get_key(args, kwargs)
-            self.once_backend.clear_lock(key)
+            self.once_backend.clear_lock(key, self.lock_id)

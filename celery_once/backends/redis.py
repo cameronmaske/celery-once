@@ -99,20 +99,30 @@ class Redis(object):
         the task. By default, the tasks and the key expire after 60 minutes.
         (meaning it will not be executed and the lock will clear).
         """
-        acquired = Lock(
+        lock = Lock(
             self.redis,
             key,
             timeout=timeout,
             blocking=self.blocking,
             blocking_timeout=self.blocking_timeout
-        ).acquire()
+        )
 
-        if not acquired:
+        if not lock.acquire():
             # Time remaining in milliseconds
             # https://redis.io/commands/pttl
             ttl = self.redis.pttl(key)
             raise AlreadyQueued(ttl / 1000.)
 
-    def clear_lock(self, key):
-        """Remove the lock from redis."""
-        return self.redis.delete(key)
+        return lock.local.token.decode()
+
+    def clear_lock(self, key, lock_id):
+        """
+        Remove the lock from redis. Return true if the lock was removed.
+        Will not remove the lock if the lock was not created by this task.
+        """
+        found_id = self.redis.get(key)
+
+        if found_id and found_id.decode() == lock_id:
+            return self.redis.delete(key)
+
+        return False

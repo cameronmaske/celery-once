@@ -6,6 +6,7 @@ import errno
 import os
 import tempfile
 import time
+import uuid
 
 import six
 
@@ -51,6 +52,8 @@ class File(object):
         try:
             # Create lock file, raise exception if it exists
             fd = os.open(lock_path, os.O_CREAT | os.O_EXCL)
+            lock_id = uuid.uuid1().hex.encode()
+            fd.write(lock_id)
         except OSError as error:
             if error.errno == errno.EEXIST:
                 # File already exists, check its modification time
@@ -68,9 +71,16 @@ class File(object):
         else:
             os.close(fd)
 
-    def clear_lock(self, key):
+    def clear_lock(self, key, lock_id):
         """
         Remove the lock file.
         """
         lock_path = self._get_lock_path(key)
-        os.remove(lock_path)
+        with open(lock_path, 'r') as file:
+            found_id = file.read()
+
+            if found_id and found_id.decode() == lock_id:
+                os.remove(lock_path)
+                return True
+
+        return False

@@ -97,7 +97,7 @@ class QueueOnce(Task):
             try:
                 self.lock_id = self.once_backend.raise_or_lock(
                     key, timeout=once_timeout)
-                    
+
             except AlreadyQueued as e:
                 if once_graceful:
                     return EagerResult(None, None, states.REJECTED)

@@ -49,11 +49,12 @@ class File(object):
         Check the lock file and create one if it does not exist.
         """
         lock_path = self._get_lock_path(key)
+        lock_id = uuid.uuid1().hex
         try:
             # Create lock file, raise exception if it exists
             fd = os.open(lock_path, os.O_CREAT | os.O_EXCL)
-            lock_id = uuid.uuid1().hex.encode()
-            fd.write(lock_id)
+            with open(lock_path, 'w') as editable:
+                editable.write(lock_id)
         except OSError as error:
             if error.errno == errno.EEXIST:
                 # File already exists, check its modification time
@@ -64,12 +65,15 @@ class File(object):
                 else:
                     # Update modification time if timeout happens
                     os.utime(lock_path, None)
-                    return
+                    with open(lock_path, 'w') as editable:
+                        editable.write(lock_id)
+                    return lock_id
             else:
                 # Re-raise unexpected OSError
                 raise
         else:
             os.close(fd)
+            return lock_id
 
     def clear_lock(self, key, lock_id):
         """
@@ -79,7 +83,7 @@ class File(object):
         with open(lock_path, 'r') as file:
             found_id = file.read()
 
-            if found_id and found_id.decode() == lock_id:
+            if found_id and found_id == lock_id:
                 os.remove(lock_path)
                 return True
 

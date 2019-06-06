@@ -58,7 +58,8 @@ def backend(mocker):
 def test_file_create_lock(backend, mocker):
     key = 'test.task.key'
     timeout = 3600
-    open_mock = mocker.patch('celery_once.backends.file.os.open')
+    os_open_mock = mocker.patch('celery_once.backends.file.os.open')
+    open_mock= mocker.patch('celery_once.backends.file.open')
     mtime_mock = mocker.patch('celery_once.backends.file.os.path.getmtime')
     utime_mock = mocker.patch('celery_once.backends.file.os.utime')
     close_mock = mocker.patch('celery_once.backends.file.os.close')
@@ -66,14 +67,16 @@ def test_file_create_lock(backend, mocker):
                                       key_to_lock_name(key))
     ret = backend.raise_or_lock(key, timeout)
 
-    assert open_mock.call_count == 1
-    assert open_mock.call_args[0] == (
+    assert os_open_mock.call_count == 1
+    assert os_open_mock.call_args[0] == (
         expected_lock_path,
         os.O_CREAT | os.O_EXCL,
     )
+    assert open_mock.call_count == 1
+    assert open_mock.call_args[0] == (expected_lock_path, 'w')
+    assert open_mock().__enter__().write.call_args[0] == (ret,)
     assert utime_mock.called is False
     assert close_mock.called is True
-    assert ret is None
 
 def test_file_lock_exists(backend, mocker):
     key = 'test.task.key'
@@ -100,9 +103,10 @@ def test_file_lock_exists(backend, mocker):
 def test_file_lock_timeout(backend, mocker):
     key = 'test.task.key'
     timeout = 3600
-    open_mock = mocker.patch(
+    os_open_mock = mocker.patch(
         'celery_once.backends.file.os.open',
         side_effect=OSError(errno.EEXIST, 'error'))
+    open_mock= mocker.patch('celery_once.backends.file.open')
     mtime_mock = mocker.patch(
         'celery_once.backends.file.os.path.getmtime',
         return_value=1550150000.0)
@@ -115,11 +119,12 @@ def test_file_lock_timeout(backend, mocker):
                                       key_to_lock_name(key))
     ret = backend.raise_or_lock(key, timeout)
 
-    assert open_mock.call_count == 1
+    assert os_open_mock.call_count == 1
+    assert open_mock.call_args[0] == (expected_lock_path, 'w')
+    assert open_mock().__enter__().write.call_args[0] == (ret,)
     assert utime_mock.call_count == 1
     assert utime_mock.call_args[0] == (expected_lock_path, None)
     assert close_mock.called is False
-    assert ret is None
 
 def test_file_clear_lock(backend, mocker):
     key = 'test.task.key'
@@ -129,12 +134,29 @@ def test_file_clear_lock(backend, mocker):
 
 
     mocker.patch(
-        'src.update_logstash.subprocess.Popen',
-        return_value=mocker.MagicMock(__enter__=mocker.MagicMock(
-            return_value="unlock value"))).start()
+        'celery_once.backends.file.open',
+        return_value=mocker.MagicMock(__enter__=lambda x: mocker.MagicMock(
+            read=lambda: "unlock value"))).start()
 
     ret = backend.clear_lock(key, "unlock value")
 
     assert remove_mock.call_count == 1
     assert remove_mock.call_args[0] == (expected_lock_path,)
-    assert ret is None
+    assert ret is True
+
+def test_file_cannot_clear_lock(backend, mocker):
+    key = 'test.task.key'
+    remove_mock = mocker.patch('celery_once.backends.file.os.remove')
+    expected_lock_path = os.path.join(TEST_LOCATION,
+                                      key_to_lock_name(key))
+
+
+    mocker.patch(
+        'celery_once.backends.file.open',
+        return_value=mocker.MagicMock(__enter__=lambda x: mocker.MagicMock(
+            read=lambda: b"unlock value"))).start()
+
+    ret = backend.clear_lock(key, "incorrect key")
+
+    assert remove_mock.call_count == 0
+    assert ret is False

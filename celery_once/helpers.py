@@ -6,8 +6,24 @@ import operator
 import six
 import importlib
 from collections import OrderedDict
-
+from celery import Task
 from time import time
+
+try:
+    from inspect import signature
+except:
+    from funcsigs import signature
+
+def get_call_args(func, *args, **kwargs):
+    print(signature(func))
+    call_args = signature(func).bind(*args, **kwargs).arguments
+    # Remove the task instance from the kwargs. This only happens when the
+    # task has the 'bind' attribute set to True. We remove it, as the task
+    # has a memory pointer in its repr, that will change between the task
+    # caller and the celery worker
+    if isinstance(call_args.get('self'), Task):
+        del call_args['self']
+    return call_args
 
 
 def import_backend(config):

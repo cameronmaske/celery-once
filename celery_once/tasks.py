@@ -11,6 +11,11 @@ class AlreadyQueued(Exception):
         self.message = "Expires in {} seconds".format(countdown)
         self.countdown = countdown
 
+try:
+    from inspect import signature
+except:
+    from funcsigs import signature
+
 
 class QueueOnce(Task):
     abstract = True
@@ -56,6 +61,10 @@ class QueueOnce(Task):
 
     def unlock_before_run(self):
         return self.once.get('unlock_before_run', False)
+
+    def __init__(self, *args, **kwargs):
+        self._siganture = signature(self.run)
+        return super(QueueOnce, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
         # Only clear the lock before the task's execution if the
@@ -106,7 +115,13 @@ class QueueOnce(Task):
         restrict_to = self.once.get('keys', None)
         args = args or {}
         kwargs = kwargs or {}
-        call_args = get_call_args(getattr(self, '_orig_run', self.run), *args, **kwargs)
+        call_args = self._siganture.bind(*args, **kwargs).arguments
+        # Remove the task instance from the kwargs. This only happens when the
+        # task has the 'bind' attribute set to True. We remove it, as the task
+        # has a memory pointer in its repr, that will change between the task
+        # caller and the celery worker
+        if isinstance(call_args.get('self'), Task):
+            del call_args['self']
         key = queue_once_key(self.name, call_args, restrict_to)
         return key
 

@@ -117,3 +117,4 @@ def test_import_backend():
     }
     backend = import_backend(config)
     assert backend.settings == 1
+

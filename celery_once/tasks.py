@@ -3,7 +3,7 @@
 
 from celery import Task, states
 from celery.result import EagerResult
-from .helpers import queue_once_key, import_backend, get_call_args
+from .helpers import queue_once_key, import_backend
 
 
 class AlreadyQueued(Exception):
@@ -107,6 +107,16 @@ class QueueOnce(Task):
                 raise e
         return super(QueueOnce, self).apply_async(args, kwargs, **options)
 
+    def _get_call_args(self, args, kwargs):
+        call_args = self._siganture.bind(*args, **kwargs).arguments
+        # Remove the task instance from the kwargs. This only happens when the
+        # task has the 'bind' attribute set to True. We remove it, as the task
+        # has a memory pointer in its repr, that will change between the task
+        # caller and the celery worker
+        if isinstance(call_args.get('self'), Task):
+            del call_args['self']
+        return call_args
+
     def get_key(self, args=None, kwargs=None):
         """
         Generate the key from the name of the task (e.g. 'tasks.example') and
@@ -115,13 +125,7 @@ class QueueOnce(Task):
         restrict_to = self.once.get('keys', None)
         args = args or {}
         kwargs = kwargs or {}
-        call_args = self._siganture.bind(*args, **kwargs).arguments
-        # Remove the task instance from the kwargs. This only happens when the
-        # task has the 'bind' attribute set to True. We remove it, as the task
-        # has a memory pointer in its repr, that will change between the task
-        # caller and the celery worker
-        if isinstance(call_args.get('self'), Task):
-            del call_args['self']
+        call_args = self._get_call_args(args, kwargs)
         key = queue_once_key(self.name, call_args, restrict_to)
         return key
 

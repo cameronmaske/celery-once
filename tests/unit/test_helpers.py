@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from celery_once.helpers import (
-    queue_once_key, kwargs_to_list, force_string, import_backend, get_call_args)
+    queue_once_key, kwargs_to_list, force_string, import_backend)
 
 import pytest
 import six
@@ -119,27 +119,3 @@ def test_import_backend():
     backend = import_backend(config)
     assert backend.settings == 1
 
-
-def test_get_call_args():
-    def test(a, b):
-        pass
-    call_args = get_call_args(test, 1, 2)
-    assert call_args == {'a': 1, 'b': 2}
-
-
-def test_get_call_args_decorator():
-    def test(a, b):
-        pass
-
-    def decorater(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            return f(*args, **kwargs)
-        if six.PY2:
-            wrapper.__wrapped__ = f
-        return wrapper
-
-    wrapped_test = decorater(test)
-
-    call_args = get_call_args(wrapped_test, 1, 2)
-    assert call_args == {'a': 1, 'b': 2}

@@ -1,6 +1,14 @@
 History
 =======
 
+3.0.1
+-----
+2019-08-21
+
+Behind the scenes, changed how key's are generated from task function and arguments.
+No longer uses ``inspect.getcallargs`` (deprecrated) and is stored on ``__init__``.
+Should fix issues if tasks are wrapped by other libraries (i.e. sentry-python).
+
 3.0.0
 -----
 2019-05-13

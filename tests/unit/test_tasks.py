@@ -54,3 +54,11 @@ def test_get_key_bound_task():
 def test_get_key_autoretry_for():
     assert "qo_autoretry_for_example_a-1_b-2" == autoretry_for_example.get_key(
         kwargs={'a': 1, 'b': 2})
+
+def test_get_call_args():
+    args = args_example._get_call_args((1,2), {})
+    assert args == {'a': 1, 'b': 2}
+
+def test_get_call_args_bound():
+    args = bound_task._get_call_args((1,2), {})
+    assert args == {'a': 1, 'b': 2}

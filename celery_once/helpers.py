@@ -14,9 +14,10 @@ try:
 except:
     from funcsigs import signature
 
+
 def get_call_args(func, *args, **kwargs):
-    print(signature(func))
-    call_args = signature(func).bind(*args, **kwargs).arguments
+    sig = signature(func)
+    call_args = sig.bind(*args, **kwargs).arguments
     # Remove the task instance from the kwargs. This only happens when the
     # task has the 'bind' attribute set to True. We remove it, as the task
     # has a memory pointer in its repr, that will change between the task

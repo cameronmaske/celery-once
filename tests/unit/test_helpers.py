@@ -135,6 +135,8 @@ def test_get_call_args_decorator():
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             return f(*args, **kwargs)
+        if six.PY2:
+            wrapper.__wrapped__ = f
         return wrapper
 
     wrapped_test = decorater(test)

@@ -4,7 +4,6 @@ from celery_once.helpers import (
 
 import pytest
 import six
-import functools
 
 
 def test_force_string_1():

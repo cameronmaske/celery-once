@@ -200,7 +200,7 @@ Configuration:
 
   - ``blocking`` (boolean value: default ``False``) - If set to ``True``, scheduling a task (by ``.delay/.apply_async``) will block for X seconds to acquire the lock (see: ``blocking_timeout`` below). If no lock could be acquired after X seconds, will raise an ``AlreadyQueued`` exception. This is a very specific use-case scenario and by default is disabled.
 
-  - ``blocking_timeout`` (int or float value: default ``1``) - How many seconds the task will block trying to aquire the lock, if ``blocking`` is set to ``True``. Setting this to ``None`` set's no timeout (equivalent to infinite seconds).
+  - ``blocking_timeout`` (int or float value: default ``1``) - How many seconds the task will block trying to acquire the lock, if ``blocking`` is set to ``True``. Setting this to ``None`` set's no timeout (equivalent to infinite seconds).
 
 
 
@@ -280,7 +280,7 @@ Example Configuration:
     }
 
 
-Flask Intergration
+Flask Integration
 ------------------
 To avoid ``RuntimeError: Working outside of application context`` errors when using ``celery_once`` with `Flask <http://flask.pocoo.org/docs/1.0/>`_, you need to make the ``QueueOnce`` task base class application context aware.
 If you've implemented Celery following the Flask `documentation <http://flask.pocoo.org/docs/1.0/patterns/celery/#configure>`_ you can extend it like so.

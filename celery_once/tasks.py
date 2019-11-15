@@ -63,7 +63,7 @@ class QueueOnce(Task):
         return self.once.get('unlock_before_run', False)
 
     def __init__(self, *args, **kwargs):
-        self._siganture = signature(self.run)
+        self._signature = signature(self.run)
         return super(QueueOnce, self).__init__(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
@@ -108,7 +108,7 @@ class QueueOnce(Task):
         return super(QueueOnce, self).apply_async(args, kwargs, **options)
 
     def _get_call_args(self, args, kwargs):
-        call_args = self._siganture.bind(*args, **kwargs).arguments
+        call_args = self._signature.bind(*args, **kwargs).arguments
         # Remove the task instance from the kwargs. This only happens when the
         # task has the 'bind' attribute set to True. We remove it, as the task
         # has a memory pointer in its repr, that will change between the task
@@ -131,7 +131,7 @@ class QueueOnce(Task):
 
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
-        After a task has run (both succesfully or with a failure) clear the
+        After a task has run (both successfully or with a failure) clear the
         lock if "unlock_before_run" is False.
         """
         # Only clear the lock after the task's execution if the

@@ -131,3 +131,14 @@ def test_file_clear_lock(backend, mocker):
     assert remove_mock.call_count == 1
     assert remove_mock.call_args[0] == (expected_lock_path,)
     assert ret is None
+
+
+def test_file_clear_lock_already_removed(backend, mocker):
+    key = 'test.task.key'
+    mocker.patch('celery_once.backends.file.os.remove',
+                 side_effect=OSError(errno.ENOENT, 'error'))
+    expected_lock_path = os.path.join(TEST_LOCATION,
+                                      key_to_lock_name(key))
+    ret = backend.clear_lock(key)
+
+    assert ret is None

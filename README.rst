@@ -333,7 +333,7 @@ If you want to implement a custom locking backend, see `BACKEND\_GUIDE.rst`_.
 Support
 =======
 
-* Tests are run against Python 2.7, 3.5, 3.6 and 3.7. Other versions may work, but are not officially supported.
+* Tests are run against Python 3.5, 3.6, 3.7 and 3.8. Other versions may work, but are not officially supported.
 
 Contributing
 ============

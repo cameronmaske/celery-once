@@ -75,9 +75,9 @@ class File(object):
         lock_path = self._get_lock_path(key)
         try:
             os.remove(lock_path)
-        except OSError as error:
-            if error.errno == errno.ENOENT:
+        except OSError as exc:
+            if exc.errno == errno.ENOENT:
                 # Lock file already deleted
                 pass
             else:
-                raise
+                raise exc

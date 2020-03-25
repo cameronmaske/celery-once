@@ -73,4 +73,11 @@ class File(object):
         Remove the lock file.
         """
         lock_path = self._get_lock_path(key)
-        os.remove(lock_path)
+        try:
+            os.remove(lock_path)
+        except OSError as exc:
+            if exc.errno == errno.ENOENT:
+                # Lock file already deleted
+                pass
+            else:
+                raise exc

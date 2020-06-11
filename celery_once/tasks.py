@@ -75,7 +75,7 @@ class QueueOnce(Task):
         return super(QueueOnce, self).__call__(*args, **kwargs)
 
     def apply_async(self, args=None, kwargs=None, **options):
-        """
+        r"""
         Attempts to queues a task.
         Will raises an AlreadyQueued exception if already queued.
 

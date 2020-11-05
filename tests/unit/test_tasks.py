@@ -1,6 +1,9 @@
 
-from celery import task
+from celery._state import get_current_app
 from celery_once.tasks import QueueOnce
+
+
+task = get_current_app().task
 
 
 @task(name='simple_example', base=QueueOnce)

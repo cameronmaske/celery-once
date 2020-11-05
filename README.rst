@@ -147,6 +147,23 @@ If you want to specify locking based on a subset, or no arguments you can adjust
         ..
     AlreadyQueued()
 
+And in case you want a key inside a dict parameter as your lock key, you could use a string with its `dotted notation path <https://github.com/carlosescri/DottedDict/blob/master/README.rst#example-2-dotteddict>`_:
+
+.. code:: python
+
+    @celery.task(base=QueueOnce, once={'keys': ['payload.a']})
+    def slow_payload_add(payload, b):
+        sleep(30)
+        return payload['a'] + b
+
+    example.delay({'a': 1, 'another_key': 'any'}, 1)
+    # Checks if any tasks are running with the `a=1`
+    example.delay({'a': 1, 'another_key_again': 'any other'}, 2)
+    Traceback (most recent call last):
+        ..
+    AlreadyQueued()
+    example.delay({'a': 2}, 2)
+
 
 ``timeout``
 -----------
@@ -215,7 +232,7 @@ The URL parser supports three patterns of urls:
   The ``options`` query args are mapped to the `StrictRedis <https://redis-py.readthedocs.org/en/latest/index.html#redis.StrictRedis>`_ keyword args.
   Examples:
   * ``redis://localhost:6379/1``
-  
+
   * ``redis://localhost:6379/1?ssl=true``
 
   * ``rediss://localhost:6379/1``

@@ -7,6 +7,8 @@ import six
 import importlib
 from collections import OrderedDict
 
+from dotted.collection import DottedDict
+
 
 def import_backend(config):
     """
@@ -67,7 +69,8 @@ def queue_once_key(name, kwargs, restrict_to=None):
     keys = ['qo', force_string(name)]
     # Restrict to only the keys allowed in keys.
     if restrict_to is not None:
-        restrict_kwargs = {key: kwargs[key] for key in restrict_to}
+        dotted_kwargs = DottedDict(kwargs)
+        restrict_kwargs = {key: dotted_kwargs[key] for key in restrict_to}
         keys += kwargs_to_list(restrict_kwargs)
     else:
         keys += kwargs_to_list(kwargs)

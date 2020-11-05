@@ -23,6 +23,11 @@ def select_args_example(a, b):
     return a + b
 
 
+@task(name='select_args_dict_example', base=QueueOnce, once={'keys': ['payload.a']})
+def select_args_dict_example(payload, b):
+    return payload['a'] + b
+
+
 @task(name='autoretry_for_example', base=QueueOnce, autoretry_for=(Exception,))
 def autoretry_for_example(a, b):
     return a + b
@@ -44,6 +49,11 @@ def test_get_key_args_2():
 def test_get_key_select_args_1():
     assert "qo_select_args_example_a-1" == select_args_example.get_key(
         kwargs={'a': 1, 'b': 2})
+
+
+def test_get_dotted_key_select_args_1():
+    assert "qo_select_args_dict_example_payload.a-1" ==\
+        select_args_dict_example.get_key(kwargs={'payload': {'a': 1}, 'b': 2})
 
 
 def test_get_key_bound_task():

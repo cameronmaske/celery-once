@@ -93,6 +93,11 @@ def test_queue_once_key_kwargs_restrict_keys():
     assert key == "qo_example_pk-10"
 
 
+def test_queue_once_key_kwargs_restrict_dotted_keys():
+    key = queue_once_key("example", {'dict': {'pk': 10}, 'id': 10}, restrict_to=['dict.pk'])
+    assert key == "qo_example_dict.pk-10"
+
+
 @pytest.mark.skipif(six.PY3, reason='requires python 2')
 def test_queue_once_key_unicode_py2():
     key = queue_once_key(u"éxample", {'a': u'é', u'b': 'é'})

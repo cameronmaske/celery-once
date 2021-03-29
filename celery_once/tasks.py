@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Definition of the QueueOnce task and AlreadyQueued exception."""
-
+from datetime import timezone
 from celery import Task, states
 from celery.result import EagerResult
+from celery.utils.time import localize
 from .helpers import queue_once_key, import_backend
 
 
@@ -57,7 +58,7 @@ class QueueOnce(Task):
 
     @property
     def default_timeout(self):
-        return self.once_config['settings'].get('default_timeout', 60 * 60)
+        return self.once_config['settings'].get('default_timeout')
 
     def unlock_before_run(self):
         return self.once.get('unlock_before_run', False)
@@ -73,6 +74,14 @@ class QueueOnce(Task):
             key = self.get_key(args, kwargs)
             self.once_backend.clear_lock(key)
         return super(QueueOnce, self).__call__(*args, **kwargs)
+
+    @staticmethod
+    def calc_timeout(options):
+        countdown, eta = options.get("countdown"), options.get("eta")
+        if countdown:
+            return countdown
+        elif eta:
+            return localize(eta, timezone.utc)
 
     def apply_async(self, args=None, kwargs=None, **options):
         """
@@ -94,8 +103,13 @@ class QueueOnce(Task):
         once_options = options.get('once', {})
         once_graceful = once_options.get(
             'graceful', self.once.get('graceful', False))
-        once_timeout = once_options.get(
-            'timeout', self.once.get('timeout', self.default_timeout))
+        once_timeout = (
+            once_options.get('timeout')
+            or self.once.get('timeout')
+            or self.default_timeout
+            or self.calc_timeout(options)
+            or 60 * 60
+        )
 
         if not options.get('retries'):
             key = self.get_key(args, kwargs)

@@ -37,6 +37,11 @@ def example_retry(self, a=0):
         self.retry(kwargs={'a': 1})
 
 
+@app.task(name='example_optional_kwargs', base=QueueOnce, once={'keys': ['foo', 'bar'], "timeout": 160})
+def example_optional_kwargs(foo=None, bar=None):
+    return
+    
+
 def test_config():
     assert example.config == app.conf
 
@@ -97,3 +102,11 @@ def test_delay_unlock_before_run(mocker):
     example_unlock_before_run.apply_async()
     assert len(mock_parent.mock_calls) == 2
     assert mock_parent.mock_calls[0] == mocker.call.clear_lock('qo_example_unlock_before_run')
+
+
+def test_optional_kwargs(mocker):
+    example_optional_kwargs.apply_async()
+    example_optional_kwargs.once_backend.raise_or_lock.assert_called_with("qo_example_optional_kwargs_bar-None_foo-None", timeout=160)
+    
+    example_optional_kwargs.apply_async(kwargs={'foo': 'x'})
+    example_optional_kwargs.once_backend.raise_or_lock.assert_called_with("qo_example_optional_kwargs_bar-None_foo-x", timeout=160)

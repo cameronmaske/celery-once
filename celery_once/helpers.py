@@ -68,7 +68,7 @@ def queue_once_key(name, kwargs, restrict_to=None):
     keys = ['qo', force_string(name)]
     # Restrict to only the keys allowed in keys.
     if restrict_to is not None:
-        restrict_kwargs = {key: kwargs[key] for key in restrict_to}
+        restrict_kwargs = {key: kwargs.get(key) for key in restrict_to}
         keys += kwargs_to_list(restrict_kwargs)
     else:
         keys += kwargs_to_list(kwargs)

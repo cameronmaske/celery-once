@@ -105,11 +105,6 @@ def test_queue_once_key_unicode_py3():
     assert key == "qo_éxample_a-é_b-é"
 
 
-class TestBackend(object):
-    def __init__(self, settings):
-        self.settings = settings
-
-
 def test_import_backend():
     config = {
         'backend': "tests.backends.TestBackend",

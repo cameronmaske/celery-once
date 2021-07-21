@@ -21,7 +21,8 @@ class QueueOnce(Task):
     abstract = True
     once = {
         'graceful': False,
-        'unlock_before_run': False
+        'unlock_before_run': False,
+        'keep_lock_until_timeout': False
     }
 
     """
@@ -61,6 +62,9 @@ class QueueOnce(Task):
 
     def unlock_before_run(self):
         return self.once.get('unlock_before_run', False)
+    
+    def keep_lock_until_timeout(self):
+        return self.once.get('keep_lock_until_timeout', False)
 
     def __init__(self, *args, **kwargs):
         self._signature = signature(self.run)
@@ -132,10 +136,10 @@ class QueueOnce(Task):
     def after_return(self, status, retval, task_id, args, kwargs, einfo):
         """
         After a task has run (both successfully or with a failure) clear the
-        lock if "unlock_before_run" is False.
+        lock if "unlock_before_run" and "keep_lock_until_timeout" are False.
         """
         # Only clear the lock after the task's execution if the
         # "unlock_before_run" option is False
-        if not self.unlock_before_run():
+        if not self.unlock_before_run() and not self.keep_lock_until_timeout():
             key = self.get_key(args, kwargs)
             self.once_backend.clear_lock(key)

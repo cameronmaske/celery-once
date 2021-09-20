@@ -38,7 +38,8 @@ Once installed, you'll need to configure a few options a ``ONCE`` key in celery'
       'backend': 'celery_once.backends.Redis',
       'settings': {
         'url': 'redis://localhost:6379/0',
-        'default_timeout': 60 * 60
+        'default_timeout': 60 * 60,
+        'keep_lock_until_timeout': False
       }
     }
 
@@ -176,7 +177,24 @@ By default, the lock is removed after the task has executed (using celery's `aft
         return "Done!"
 
 
+``keep_lock_until_timeout``
+-----------
+By default, when the lock is removed at the end of the task of at the end of the timeout, a new similar task can be pushed in the queue.
+If you set ``'keep_lock_until_timeout' : True`` in the conf, no matter if the task has ended or not, you can't push the same task until the time if over the timeout. 
 
+.. code:: python
+
+    celery.conf.ONCE = {
+        'backend': 'celery_once.backends.Redis',
+        'settings': {
+            'url': 'redis://localhost:6379/0',
+            'default_timeout': 60 * 60,
+            'keep_lock_until_timeout': True
+        }
+    }
+        
+        
+        
 
 Backends
 ========

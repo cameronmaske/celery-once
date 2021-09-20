@@ -27,15 +27,12 @@ class QueueOnce(Task):
 
     """
     'There can be only one'. - Highlander (1986)
-
     An abstract tasks with the ability to detect if it has already been queued.
     When running the task (through .delay/.apply_async) it checks if the tasks
     is not already queued. By default it will raise an
     an AlreadyQueued exception if it is, by you can silence this by including
     `once={'graceful': True}` in apply_async or in the task's settings.
-
     Example:
-
     >>> from celery_queue.tasks import QueueOnce
     >>> from celery import task
     >>> @task(base=QueueOnce, once={'graceful': True})
@@ -64,7 +61,7 @@ class QueueOnce(Task):
         return self.once.get('unlock_before_run', False)
     
     def keep_lock_until_timeout(self):
-        return self.once.get('keep_lock_until_timeout', False)
+        return self.once_config['settings'].get('keep_lock_until_timeout', False)
 
     def __init__(self, *args, **kwargs):
         self._signature = signature(self.run)
@@ -82,7 +79,6 @@ class QueueOnce(Task):
         """
         Attempts to queues a task.
         Will raises an AlreadyQueued exception if already queued.
-
         :param \*args: positional arguments passed on to the task.
         :param \*\*kwargs: keyword arguments passed on to the task.
         :keyword \*\*once: (optional)
@@ -93,14 +89,13 @@ class QueueOnce(Task):
                 An `int' number of seconds after which the lock will expire.
                 If not set, defaults to 1 hour.
             :param: keys: (optional)
-
         """
         once_options = options.get('once', {})
         once_graceful = once_options.get(
             'graceful', self.once.get('graceful', False))
         once_timeout = once_options.get(
             'timeout', self.once.get('timeout', self.default_timeout))
-
+            
         if not options.get('retries'):
             key = self.get_key(args, kwargs)
             try:

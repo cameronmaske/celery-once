@@ -279,6 +279,33 @@ Example Configuration:
         }
     }
 
+Sentinel Backend
+-----------------
+
+Configuration:
+
+-  ``backend`` - ``celery_once.backends.Sentinel``
+
+-  ``settings``
+
+  - ``instances`` - List of sentinels nodes like [url:port, url2:port].
+  - ``password`` - Password to connect sentinel if exist.
+  - ``blocking`` - False by default.
+
+  - ``default_timeout`` - how many seconds after a lock has been set before it should automatically timeout (defaults to 3600 seconds, or 1 hour).
+
+
+Example Configuration:
+
+.. code:: python
+
+    app.conf.ONCE = {
+            "backend": "celery_once.backends.Sentinel",
+            "settings": {"instances": [node1_sentinel.url:1234, node2_sentinel.url:3214],
+                         "default_timeout": 60 * 60 * 24,
+                         "master_name": 'my_master',
+                         "password": 'strong_one'},
+    }
 
 Flask Integration
 ------------------

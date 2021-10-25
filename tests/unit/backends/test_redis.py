@@ -52,62 +52,58 @@ def test_parse_unsupported_url():
         parse_url('amqp://guest:guest@localhost:5672/potato')
 
 
-@pytest.fixture()
-def redis(monkeypatch):
-    fake_redis = FakeStrictRedis()
-    fake_redis.flushall()
-    monkeypatch.setattr("celery_once.backends.redis.Redis.redis", fake_redis)
-    return fake_redis
+class TestRedis(object):
+    @pytest.fixture()
+    def redis(self, monkeypatch):
+        fake_redis = FakeStrictRedis()
+        fake_redis.flushall()
+        monkeypatch.setattr("celery_once.backends.redis.Redis.redis", fake_redis)
+        return fake_redis
 
+    @pytest.fixture()
+    def backend(self):
+        backend = Redis({'url': "redis://localhost:1337"})
+        return backend
 
-@pytest.fixture()
-def backend():
-    backend = Redis({'url': "redis://localhost:1337"})
-    return backend
-
-
-def test_redis_raise_or_lock(redis, backend):
-    assert redis.get("test") is None
-    backend.raise_or_lock(key="test", timeout=60)
-    assert redis.get("test") is not None
-
-def test_redis_raise_or_lock_locked(redis, backend):
-    # Set to expire in 30 seconds!
-    lock = RedisLock(redis, "test", timeout=30)
-    lock.acquire()
-
-    with pytest.raises(AlreadyQueued) as e:
+    def test_redis_raise_or_lock(self, redis, backend):
+        assert redis.get("test") is None
         backend.raise_or_lock(key="test", timeout=60)
+        assert redis.get("test") is not None
 
-    assert e.value.countdown == approx(30.0, rel=0.1)
-    assert "Expires in" in e.value.message
+    def test_redis_raise_or_lock_locked(self, redis, backend):
+        # Set to expire in 30 seconds!
+        lock = RedisLock(redis, "test", timeout=30)
+        lock.acquire()
 
+        with pytest.raises(AlreadyQueued) as e:
+            backend.raise_or_lock(key="test", timeout=60)
 
-def test_redis_raise_or_lock_locked_and_expired(redis, backend):
-    lock = RedisLock(redis, "test", timeout=1)
-    lock.acquire()
-    time.sleep(1)  # wait for lock to expire
+        assert e.value.countdown == approx(30.0, rel=0.1)
+        assert "Expires in" in e.value.message
 
-    backend.raise_or_lock(key="test", timeout=60)
-    assert redis.get("test") is not None
+    def test_redis_raise_or_lock_locked_and_expired(self, redis, backend):
+        lock = RedisLock(redis, "test", timeout=1)
+        lock.acquire()
+        time.sleep(1)  # wait for lock to expire
 
+        backend.raise_or_lock(key="test", timeout=60)
+        assert redis.get("test") is not None
 
-def test_redis_clear_lock(redis, backend):
-    redis.set("test", 1326499200 + 30)
-    backend.clear_lock("test")
-    assert redis.get("test") is None
+    def test_redis_clear_lock(self, redis, backend):
+        redis.set("test", 1326499200 + 30)
+        backend.clear_lock("test")
+        assert redis.get("test") is None
 
-
-def test_redis_cached_property(mocker, monkeypatch):
-    # Remove any side effect previous tests could have had
-    monkeypatch.setattr('celery_once.backends.redis.redis', None)
-    mock_parse = mocker.patch('celery_once.backends.redis.parse_url')
-    mock_parse.return_value = {
-        'host': "localhost"
-    }
-    # Despite the class being inited twice, should only setup once.
-    Redis({
-        'url': "redis://localhost:1337"
-    })
-    Redis({})
-    assert mock_parse.call_count == 1
+    def test_redis_cached_property(self, mocker, monkeypatch):
+        # Remove any side effect previous tests could have had
+        monkeypatch.setattr('celery_once.backends.redis.redis', None)
+        mock_parse = mocker.patch('celery_once.backends.redis.parse_url')
+        mock_parse.return_value = {
+            'host': "localhost"
+        }
+        # Despite the class being inited twice, should only setup once.
+        Redis({
+            'url': "redis://localhost:1337"
+        })
+        Redis({})
+        assert mock_parse.call_count == 1

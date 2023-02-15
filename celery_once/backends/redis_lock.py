@@ -21,13 +21,20 @@ class RedisLockBackend(object):
 
     def __init__(self, settings):
         self._redis = redis.Redis.from_url(settings["url"])
+
         self.blocking_timeout = settings.get("blocking_timeout", 1)
         self.blocking = settings.get("blocking", False)
+        self.key_prefix = "lock:"
 
     def raise_or_lock(self, key, timeout):
         lock = Lock(self._redis, key, expire=timeout)
-        if not lock.acquire(blocking=self.blocking, timeout=self.blocking_timeout):
-            raise AlreadyQueued(self._redis.ttl("lock:" + key))
+
+        acquire_args = {"blocking": self.blocking}
+        if self.blocking:
+            acquire_args["timeout"] = self.blocking_timeout
+
+        if not lock.acquire(**acquire_args):
+            raise AlreadyQueued(self._redis.ttl(self.key_prefix + key))
 
     def clear_lock(self, key):
-        Lock(self._redis, key).reset()
+        Lock(self._redis, self.key_prefix + key).reset()

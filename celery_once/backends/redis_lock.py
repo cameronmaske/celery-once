@@ -27,14 +27,19 @@ class RedisLockBackend(object):
         self.key_prefix = "lock:"
 
     def raise_or_lock(self, key, timeout):
-        lock = Lock(self._redis, key, expire=timeout)
+        lock = Lock(self.redis, key, expire=timeout)
 
         acquire_args = {"blocking": self.blocking}
         if self.blocking:
             acquire_args["timeout"] = self.blocking_timeout
 
         if not lock.acquire(**acquire_args):
-            raise AlreadyQueued(self._redis.ttl(self.key_prefix + key))
+            raise AlreadyQueued(self.redis.ttl(self.key_prefix + key))
 
     def clear_lock(self, key):
-        Lock(self._redis, self.key_prefix + key).reset()
+        Lock(self.redis, key).reset()
+
+    @property
+    def redis(self):
+        # Used to allow easy mocking when testing.
+        return self._redis

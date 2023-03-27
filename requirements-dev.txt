@@ -7,5 +7,5 @@ fakeredis==1.0.3
 mock==1.0.1
 Flask
 celery
-redis==3.2.1
+redis==4.5.3
 six==1.12.0

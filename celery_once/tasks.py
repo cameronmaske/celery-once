@@ -119,9 +119,12 @@ class QueueOnce(Task):
 
     def get_key(self, args=None, kwargs=None):
         """
-        Generate the key from the name of the task (e.g. 'tasks.example') and
+        Generate the key from the the static_key parameter or from the name of the task (e.g. 'tasks.example') and
         args/kwargs.
         """
+        static_key = self.once.get('static_key', None)
+        if static_key:
+            return static_key
         restrict_to = self.once.get('keys', None)
         args = args or {}
         kwargs = kwargs or {}

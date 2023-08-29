@@ -35,6 +35,8 @@ def parse_url(url):
             details['port'] = parsed.port
         if parsed.password:
             details['password'] = parsed.password
+        if parsed.username:
+            details['username'] = parsed.username
         db = parsed.path.lstrip('/')
         if db and db.isdigit():
             details['db'] = db
@@ -71,12 +73,12 @@ def get_redis(settings):
     global redis
     if not redis:
         try:
-            from redis import StrictRedis
+            from redis import Redis
         except ImportError:
             raise ImportError(
                 "You need to install the redis library in order to use Redis"
                 " backend (pip install redis)")
-        redis = StrictRedis(**parse_url(settings['url']))
+        redis = Redis(**parse_url(settings['url']))
     return redis
 
 
